@@ -6,6 +6,7 @@ var lib = require('./lib');
 var util = require('util');
 var path = require('path');
 var EventEmitter = require('events').EventEmitter;
+var DirectoryWalker = lib.DirectoryWalker;
 var toposort = require('toposort');
 
 var doneModuleName = '$done';
@@ -43,7 +44,7 @@ function WhiteHorse() {
 
     var modulesDir = path.join(basedir, directory);
 
-    var walker = new lib.DirectoryWalker({
+    var walker = new DirectoryWalker({
       fileFilter: function (name, cb) {
         cb(null, path.extname(name) === '.js');
       }
