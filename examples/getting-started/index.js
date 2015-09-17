@@ -1,4 +1,4 @@
-var WhiteHorse = require('../index.js');
+var WhiteHorse = require('../../index.js');
 
 new WhiteHorse()
 
@@ -14,7 +14,7 @@ new WhiteHorse()
     console.log('Requiring', file);
 })
 
-.use(require('../package.json'))
+.use(require('../../package.json'))
 
 .run(__dirname, 'modules', 'index', function (err, index) {
     if (err) {
