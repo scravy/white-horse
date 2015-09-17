@@ -1,0 +1,18 @@
+{
+  "name": "white-horse",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jshint *.js lib/*.js example/*.js"
+  },
+  "author": "Julian Fleischer <tirednesscankill@warhog.net>",
+  "license": "ISC",
+  "dependencies": {
+    "esprima": "^2.6.0",
+    "toposort": "^0.2.12"
+  },
+  "devDependencies": {
+    "jshint": "^2.8.0"
+  }
+}
