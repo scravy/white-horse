@@ -163,7 +163,7 @@ function WhiteHorse() {
           if (dependency === doneModuleName) {
             args.push(function (err, instance) {
               if (err) {
-                callback(err);
+                callback({ module: module.name, error: err });
               } else {
                 done(module, instance);
               }
