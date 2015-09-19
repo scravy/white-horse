@@ -1,5 +1,7 @@
 # white-horse
 
+[![Build Status](https://travis-ci.org/scravy/white-horse.svg?branch=master)](https://travis-ci.org/scravy/white-horse)
+
 Simple, light-weight dependency injection for NodeJS that supports modules which load asynchronously.
 
 # Usage
