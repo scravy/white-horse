@@ -323,7 +323,10 @@ function WhiteHorse() {
   };
 
   
-  this.modules = function () {
+  this.modules = function (returnOrdered) {
+    if (returnOrdered) {
+      return orderDependencies();
+    }
     return Object.keys(modules);
   };
 }
