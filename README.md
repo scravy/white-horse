@@ -4,11 +4,13 @@
 
 Simple, light-weight dependency injection for NodeJS that supports modules which load asynchronously.
 
+
 # Usage
 
     npm install --save white-horse
 
 For examples see [the examples directory](examples/).
+
 
 # API
 
@@ -19,7 +21,55 @@ var container = new WhiteHorse();
 Creates a new [IoC](https://en.wikipedia.org/wiki/Inversion_of_control)
 container.
 
-**init()**
+
+### register(moduleName, moduleFactory)
+
+```JavaScript
+container.register('mainModule', function (file, path, fs, http) {
+  return {
+    doYourJob: function () {
+      console.log('Hello World!');
+    }
+  };
+});
+```
+
+Registers a module with the container.
+
+
+### use(npmPackageName)
+
+```JavaScript
+container.use('http');
+```
+
+Registers an npm package as a module. You can use this function to load
+all the dependencies from your `package.json` as modules:
+
+```JavaScript
+container.use(require('./package.json'));
+```
+
+You can register multiple modules at once by either passing an array
+or multiple arguments:
+
+```JavaScript
+container.use('file', 'path', 'fs', 'http')
+container.use(['file', 'path', 'fs', 'http'])
+```
+
+### useAs(npmPackageName, moduleName)
+
+```JavaScript```
+container.useAs('white-horse', WhiteHorse);
+```
+
+Registers an npm package as a module with the given name. This is useful
+if you wand to use an npm package that contains dashes or dots in its
+name.
+
+
+### init()
 
 ```JavaScript
 container.init(function (err) {
@@ -35,7 +85,8 @@ Initializes the container, i.e. initializes all registered modules.
 The modules are initialized one after the other, in an order that
 satisfied their dependencies.
 
-**scan()**
+
+### scan()
 
 ```JavaScript
 container.scan(rootDir, modulesDir, function (err) {
@@ -55,7 +106,7 @@ for convenience, i.e. you may want to invoke this function like this:
 container.scan(__dirname, 'modules', function (err) { ... });
 ```
 
-**run()**
+### run()
 
 A convenience method that combines `scan` and `init`, i.e.:
 
@@ -99,4 +150,21 @@ container.run(__dirname, 'modules', 'mainModule', function (err, mainModule) {
   }
 });
 ```
+
+### modules()
+
+```JavaScript
+container.modules()
+```
+
+Retrieve a list of modules registered with this container.
+
+
+**isAsync(moduleName)**
+
+```JavaScript
+container.isAsync('mainModule')
+```
+
+Check whether a module is an asynchronous module or not.
 

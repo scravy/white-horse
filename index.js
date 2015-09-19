@@ -6,7 +6,7 @@ var lib = require('./lib');
 var util = require('util');
 var path = require('path');
 var EventEmitter = require('events').EventEmitter;
-var DirectoryWalker = lib.DirectoryWalker;
+var DirectoryWalker = require('directorywalker');
 var toposort = require('toposort');
 
 var doneModuleName = '$done';
