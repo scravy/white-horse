@@ -181,13 +181,16 @@ function is an asynchronous function (has a dependency on `$done`).
 This way you can e.g. return a promise from your asynchronous functions.
 
 
-### modules()
+### modules([returnOrdered])
 
 ```JavaScript
 container.modules()
 ```
 
 Retrieve a list of names of modules registered with this container.
+
+If the optional `returnOrdered` parameter is true the module names
+will be named in the order they are initialized.
 
 
 ### isAsync(moduleName)
