@@ -31,7 +31,6 @@ function WhiteHorse() {
           edges.push([ dependency, moduleName ]);
         }
       });
-
     });
 
     var result = toposort(edges);
@@ -157,33 +156,17 @@ function WhiteHorse() {
 
         self.emit('before_init', moduleName);
 
-        var args = [];
-
-        module.dependencies.forEach(function (dependency) {
-          if (dependency === doneModuleName) {
-            args.push(function (err, instance) {
-              if (err) {
-                callback(err);
-              } else {
-                done(module, instance);
-              }
-            }); 
-          } else {
-            args.push(modules[dependency].instance);
-          }
-        });
-
-        try {
-          var instance = module.factory ?
-                module.factory.apply(self, args) : module.instance;
-          
-          if (!module.isAsync) {
-            done(module, instance);
-          }
-        } catch (err) {
-          callback({ module: module.name, error: err });
+        if (module.factory) {
+          self.injectWith(module.dependencies, module.factory, function (err, instance) {
+            if (err) {
+              callback(err);
+            } else {
+              done(module, instance);
+            }
+          });
+        } else {
+          done(module, module.instance);
         }
-        
       } else {
         callback(null);
       }
@@ -268,6 +251,57 @@ function WhiteHorse() {
     var module = modules[moduleName];
     if (module) {
       return module.instance;
+    }
+  };
+
+
+  this.inject = function (func, callback) {
+
+    var injections = Array.isArray(func.$inject) ?
+          func.$inject : lib.getParameters(func);
+
+    return self.injectWith(injections, func, callback);    
+  };
+
+
+  this.injectWith = function (injections, func, callback) {
+
+    if (!Array.isArray(injections)) {
+      throw new TypeError('`injections` must be an array.');
+    }
+    if (typeof func !== 'function') {
+      throw new TypeError('`func` must be a function.');
+    }
+    if (typeof callback !== 'function') {
+      callback = null;
+    }
+
+    var isAsync = false;
+    var args = [];
+    injections.forEach(function (moduleName) {
+      if (moduleName === doneModuleName) {
+        isAsync = true;
+        args.push(callback);
+      } else {
+        args.push(self.get(moduleName));
+      }
+    });
+
+    try {
+      var result = func.apply(self, args);
+      if (isAsync) {
+        return result;
+      } else if (callback) {
+        setImmediate(callback.bind(null, null, result));        
+      } else {
+        return result;
+      }
+    } catch (err) {
+      if (callback) {
+        setImmediate(callback.bind(null, err));
+      } else {
+        throw err;
+      }
     }
   };
 
