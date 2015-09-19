@@ -247,10 +247,10 @@ function WhiteHorse() {
   };
 
 
-  this.injectWith = function (injections, func, callback) {
+  this.injectWith = function (dependencies, func, callback) {
 
-    if (!Array.isArray(injections)) {
-      throw new TypeError('`injections` must be an array.');
+    if (!Array.isArray(dependencies)) {
+      throw new TypeError('`dependencies` must be an array.');
     }
     if (typeof func !== 'function') {
       throw new TypeError('`func` must be a function.');
@@ -261,7 +261,7 @@ function WhiteHorse() {
 
     var isAsync = false;
     var args = [];
-    injections.forEach(function (moduleName) {
+    dependencies.forEach(function (moduleName) {
       if (moduleName === doneModuleName) {
         isAsync = true;
         args.push(callback);
