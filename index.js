@@ -97,13 +97,15 @@ function WhiteHorse() {
       name: name,
       isAsync: isAsync,
       dependencies: dependencies,
-      instance: nothing
+      instance: nothing,
+      initialized: false
     };
 
     if (typeof thing === 'function') {
       module.factory = thing;
     } else {
       module.instance = thing;
+      module.initialized = true;
     }
 
     modules[name] = module;
@@ -142,8 +144,11 @@ function WhiteHorse() {
     }
 
     function done(module, instance) {
-      module.instance = instance;
-      self.emit('after_init', module.name, instance);
+      if (module) {
+        module.instance = instance;
+        module.initialized = true;
+        self.emit('after_init', module.name, instance);
+      }
       current += 1;
       setImmediate(initialize);
     }
@@ -156,7 +161,9 @@ function WhiteHorse() {
 
         self.emit('before_init', moduleName);
 
-        if (module.factory) {
+        if (module.initialized) {
+          done(null);
+        } else if (module.factory) {
           self.injectWith(module.dependencies, module.factory, function (err, instance) {
             if (err) {
               callback(err);
@@ -202,22 +209,6 @@ function WhiteHorse() {
   };
 
 
-  this.dependenciesFor = function (moduleName) {
-    var module = modules[moduleName];
-    if (module) {
-      return module.dependencies.splice(0);
-    }
-  };
-
-
-  this.isAsync = function (moduleName) {
-    var module = modules[moduleName];
-    if (module) {
-      return module.isAsync;
-    }
-  };
-
-
   this.use = function (npm) {
     if (arguments.length === 1) {
       if (Array.isArray(npm)) {
@@ -244,14 +235,6 @@ function WhiteHorse() {
       return require(name);
     });
     return self;
-  };
-
-
-  this.get = function (moduleName) {
-    var module = modules[moduleName];
-    if (module) {
-      return module.instance;
-    }
   };
 
 
@@ -306,6 +289,40 @@ function WhiteHorse() {
   };
 
 
+  this.get = function (moduleName) {
+    var module = modules[moduleName];
+    if (module && module.initialized) {
+      return module.instance;
+    }
+  };
+
+
+  this.dependenciesFor = function (moduleName) {
+    var module = modules[moduleName];
+    if (module) {
+      return module.dependencies.splice(0);
+    }
+  };
+
+
+  this.isAsync = function (moduleName) {
+    var module = modules[moduleName];
+    if (module) {
+      return module.isAsync;
+    }
+  };
+
+
+  this.isInitialized = function (moduleName) {
+    var module = modules[moduleName];
+    if (module) {
+      return module.initialized;
+    } else {
+      return false;
+    }
+  };
+
+  
   this.modules = function () {
     return Object.keys(modules);
   };
