@@ -20,7 +20,7 @@ function WhiteHorse() {
   var modules = {};
 
 
-  function order() {
+  function orderDependencies() {
     var edges = [];
 
     Object.keys(modules).forEach(function (moduleName) {
@@ -110,7 +110,7 @@ function WhiteHorse() {
     modules[name] = module;
 
     try {
-      order();
+      orderDependencies();
       return 'okay';
     } catch (err) {
       delete modules[name];
@@ -120,7 +120,7 @@ function WhiteHorse() {
 
 
   this.init = function (callback) {
-    var initOrder = order();
+    var initOrder = orderDependencies();
     var current = 0;
 
     var errors = [];
