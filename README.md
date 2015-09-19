@@ -151,16 +151,46 @@ container.run(__dirname, 'modules', 'mainModule', function (err, mainModule) {
 });
 ```
 
+
+### inject(func, callback)
+
+```JavaScript
+container.inject(function (mainModule) { ... }, function (err, result) { ... })
+```
+
+Injects a function (i.e. invokes the function with the dependencies
+loaded form the container).
+
+The callback is optional. The result of calling the function will be
+returned right away if you do not specify a callback or if the
+function is an asynchronous function (has a dependency on `$done`).
+This way you can e.g. return a promise from your asynchronous functions.
+
+
+### injectWith(dependencies, func, callback)
+
+```JavaScript
+container.injectWith(['uuid-1345'], function (UUID) { ... }, function (err, result) { ... })
+```
+
+Injects a function with the dependencies named in the first argument.
+
+The callback is optional. The result of calling the function will be
+returned right away if you do not specify a callback or if the
+function is an asynchronous function (has a dependency on `$done`).
+This way you can e.g. return a promise from your asynchronous functions.
+
+
 ### modules()
 
 ```JavaScript
 container.modules()
 ```
 
-Retrieve a list of modules registered with this container.
+Retrieve a list of names of modules registered with this container.
 
 
-**isAsync(moduleName)**
+### isAsync(moduleName)
 
 ```JavaScript
 container.isAsync('mainModule')
@@ -168,3 +198,11 @@ container.isAsync('mainModule')
 
 Check whether a module is an asynchronous module or not.
 
+
+### isInitialized(moduleName)
+
+```JavaScript
+container.isInitialized('mainModule')
+```
+
+Check whether a module has already been initialized.
