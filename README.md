@@ -87,4 +87,16 @@ container.scan(__dirname, 'modules', function (err) {
 }
 ```
 
+If you're having a kind of main module as above, the example
+can be condensed even further:
+
+```JavaScript
+container.run(__dirname, 'modules', 'mainModule', function (err, mainModule) {
+  if (err) {
+    console.log(err);
+  } else {
+    mainModule.doYourJob();
+  }
+});
+```
 
