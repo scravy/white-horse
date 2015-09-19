@@ -11,14 +11,49 @@ var toposort = require('toposort');
 
 var doneModuleName = '$done';
 
-function WhiteHorse() {
+function compose() {
+  var fs = Array.prototype.slice.call(arguments);
+  return function (arg) {
+    fs.forEach(function (f) {
+      arg = f(arg);
+    });
+    return arg;
+  };
+}
+
+function WhiteHorse(options) {
   
   EventEmitter.call(this);
   var self = this;
 
+  options = options || {};
+
   var nothing = {};
   var modules = {};
 
+  var npmNameTransformer = function (name) { return name; };
+
+  if (typeof options.npmPrefix === 'string') {
+    npmNameTransformer = function (name) { return options.npmPrefix + name; };
+  }
+
+  if (typeof options.npmPostfix === 'string') {
+    npmNameTransformer = compose(function (name) { return name + options.npmPostfix; }, npmNameTransformer);
+  }
+
+  if (options.npmNormalize === true) {
+    npmNameTransformer = compose(function (name) {
+      var parts = name.split(/[^a-zA-Z0-9]+/);
+      for (var i = 1; i < parts.length; i += 1) {
+        parts[i] = parts[i][0].toUpperCase() + parts[i].slice(1);
+      }
+      return parts.join('');
+    }, npmNameTransformer);
+  }
+
+  if (typeof options.npmNameTransformer === 'function') {
+    npmNameTransformer = compose(options.npmNameTransformer, npmNameTransformer);
+  }
 
   function orderDependencies() {
     var edges = [];
@@ -216,7 +251,8 @@ function WhiteHorse() {
           self.use(val);
         });
       } else if (typeof npm === 'string') {
-        self.useAs(npm, npm);
+        var alias = npmNameTransformer(npm);
+        self.useAs(npm, alias);
       } else if (typeof npm === 'object') {
         if (typeof npm.dependencies === 'object') {
           self.use(Object.keys(npm.dependencies));
