@@ -69,7 +69,7 @@ if you wand to use an npm package that contains dashes or dots in its
 name.
 
 
-### init()
+### init(callback)
 
 ```JavaScript
 container.init(function (err) {
@@ -86,7 +86,7 @@ The modules are initialized one after the other, in an order that
 satisfied their dependencies.
 
 
-### scan()
+### scan(root, modulesDir, callback)
 
 ```JavaScript
 container.scan(rootDir, modulesDir, function (err) {
@@ -106,7 +106,7 @@ for convenience, i.e. you may want to invoke this function like this:
 container.scan(__dirname, 'modules', function (err) { ... });
 ```
 
-### run()
+### run(...)
 
 A convenience method that combines `scan` and `init`, i.e.:
 
