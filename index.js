@@ -21,6 +21,24 @@ function compose() {
   };
 }
 
+function orderDependencies(modules, injectors) {
+  var edges = [];
+
+  Object.keys(modules).forEach(function (moduleName) {
+    var module = modules[moduleName];
+    edges.push([ '', moduleName ]);
+    module.dependencies.forEach(function (dependency) {
+      if (dependency !== doneModuleName && !injectors[dependency]) {
+        edges.push([ dependency, moduleName ]);
+      }
+    });
+  });
+
+  var result = toposort(edges);
+  result.shift();
+  return result;
+}
+
 function WhiteHorse(options) {
   
   EventEmitter.call(this);
@@ -31,6 +49,7 @@ function WhiteHorse(options) {
   var nothing = {};
   var modules = {};
 
+  
   var npmNameTransformer = function (name) { return name; };
 
   if (typeof options.npmPrefix === 'string') {
@@ -55,23 +74,35 @@ function WhiteHorse(options) {
     npmNameTransformer = compose(options.npmNameTransformer, npmNameTransformer);
   }
 
-  function orderDependencies() {
-    var edges = [];
+  
+  var injectors = {};
 
-    Object.keys(modules).forEach(function (moduleName) {
-      var module = modules[moduleName];
-      edges.push([ '', moduleName ]);
-      module.dependencies.forEach(function (dependency) {
-        if (dependency !== doneModuleName) {
-          edges.push([ dependency, moduleName ]);
-        }
-      });
+  if (typeof options.injectors === 'object') {
+    Object.keys(options.injectors).forEach(function (name) {
+      if (typeof options.injectors[name] === 'function') {
+        injectors[name] = options.injectors[name];
+      }
     });
-
-    var result = toposort(edges);
-    result.shift();
-    return result;
   }
+
+
+  this.registerInjector = function (name, injector) {
+    if (typeof injector !== 'function') {
+      throw new TypeError('`injector` must be a function');
+    }
+    injectors[name] = injector;
+    return self;
+  };
+  
+
+  this.injectors = function () {
+    return Object.keys(injectors);
+  };
+
+
+  this.getInjector = function (name) {
+    return injectors[name];
+  };
 
 
   this.scan = function (basedir, directory, callback) {
@@ -138,6 +169,7 @@ function WhiteHorse(options) {
 
     if (typeof thing === 'function') {
       module.factory = thing;
+      module.factory.$name = name;
     } else {
       module.instance = thing;
       module.initialized = true;
@@ -146,7 +178,7 @@ function WhiteHorse(options) {
     modules[name] = module;
 
     try {
-      orderDependencies();
+      orderDependencies(modules, injectors);
       return 'okay';
     } catch (err) {
       delete modules[name];
@@ -156,14 +188,14 @@ function WhiteHorse(options) {
 
 
   this.init = function (callback) {
-    var initOrder = orderDependencies();
+    var initOrder = orderDependencies(modules, injectors);
     var current = 0;
 
     var errors = [];
     Object.keys(modules).forEach(function (moduleName) {
       var module = modules[moduleName];
       module.dependencies.forEach(function (dependency) {
-        if (dependency !== doneModuleName && !modules[dependency]) {
+        if (dependency !== doneModuleName && !injectors[dependency] && !modules[dependency]) {
           errors.push({
             module: module.name,
             error: 'unmet_dependency',
@@ -301,6 +333,8 @@ function WhiteHorse(options) {
       if (moduleName === doneModuleName) {
         isAsync = true;
         args.push(callback);
+      } else if (injectors[moduleName]) {
+        args.push(injectors[moduleName].call(self, func));
       } else {
         args.push(self.get(moduleName));
       }
@@ -361,7 +395,7 @@ function WhiteHorse(options) {
   
   this.modules = function (returnOrdered) {
     if (returnOrdered) {
-      return orderDependencies();
+      return orderDependencies(modules, injectors);
     }
     return Object.keys(modules);
   };
