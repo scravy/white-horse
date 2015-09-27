@@ -40,6 +40,10 @@ function orderDependencies(modules, injectors) {
 }
 
 function WhiteHorse(options) {
+
+  if (!(this instanceof WhiteHorse)) {
+    return new WhiteHorse(options);
+  }
   
   EventEmitter.call(this);
   var self = this;
@@ -53,11 +57,15 @@ function WhiteHorse(options) {
   var npmNameTransformer = function (name) { return name; };
 
   if (typeof options.npmPrefix === 'string') {
-    npmNameTransformer = function (name) { return options.npmPrefix + name; };
+    npmNameTransformer = function (name) {
+      return options.npmPrefix + name;
+    };
   }
 
   if (typeof options.npmPostfix === 'string') {
-    npmNameTransformer = compose(function (name) { return name + options.npmPostfix; }, npmNameTransformer);
+    npmNameTransformer = compose(function (name) {
+      return name + options.npmPostfix;
+    }, npmNameTransformer);
   }
 
   if (options.npmNormalize === true) {
@@ -126,7 +134,7 @@ function WhiteHorse(options) {
       var modulePath = path.join(path.dirname(relative), path.basename(relative, '.js'));
       var moduleName = modulePath.split(path.sep).join('/');
 
-      self.emit('require', filename);      
+      self.emit('require', filename);
       var module;
       try {
         module = require(filename);
@@ -206,7 +214,7 @@ function WhiteHorse(options) {
     });
 
     if (errors.length > 0) {
-      callback(errors);
+      setImmediate(callback.bind(null, errors));
       return;
     }
 
@@ -242,6 +250,7 @@ function WhiteHorse(options) {
           done(module, module.instance);
         }
       } else {
+        self.emit('init');
         callback(null);
       }
     }
