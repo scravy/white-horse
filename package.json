@@ -1,6 +1,6 @@
 {
   "name": "white-horse",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,7 @@
   "author": "Julian Fleischer <tirednesscankill@warhog.net>",
   "license": "ISC",
   "dependencies": {
-    "directorywalker": "^1.0.1",
+    "directorywalker": "^1.0.2",
     "esprima": "^2.6.0",
     "toposort": "^0.2.12"
   },
