@@ -7,18 +7,9 @@ var path = require('path');
 var EventEmitter = require('events').EventEmitter;
 var DirectoryWalker = require('directorywalker');
 var toposort = require('toposort');
+var Nodash = require('nodash');
 
 var doneModuleName = '$done';
-
-function compose() {
-  var fs = Array.prototype.slice.call(arguments);
-  return function (arg) {
-    fs.forEach(function (f) {
-      arg = f(arg);
-    });
-    return arg;
-  };
-}
 
 function orderDependencies(modules, injectors) {
   var edges = [];
@@ -53,7 +44,7 @@ function WhiteHorse(options) {
   var modules = {};
 
   
-  var npmNameTransformer = function (name) { return name; };
+  var npmNameTransformer = Nodash.id;
 
   if (typeof options.npmPrefix === 'string') {
     npmNameTransformer = function (name) {
@@ -62,23 +53,23 @@ function WhiteHorse(options) {
   }
 
   if (typeof options.npmPostfix === 'string') {
-    npmNameTransformer = compose(function (name) {
+    npmNameTransformer = Nodash.compose(npmNameTransformer, function (name) {
       return name + options.npmPostfix;
-    }, npmNameTransformer);
+    });
   }
 
   if (options.npmNormalize === true) {
-    npmNameTransformer = compose(function (name) {
+    npmNameTransformer = Nodash.compose(npmNameTransformer, function (name) {
       var parts = name.split(/[^a-zA-Z0-9]+/);
       for (var i = 1; i < parts.length; i += 1) {
         parts[i] = parts[i][0].toUpperCase() + parts[i].slice(1);
       }
       return parts.join('');
-    }, npmNameTransformer);
+    });
   }
 
   if (typeof options.npmNameTransformer === 'function') {
-    npmNameTransformer = compose(options.npmNameTransformer, npmNameTransformer);
+    npmNameTransformer = Nodash.compose(npmNameTransformer, options.npmNameTransformer);
   }
 
   
@@ -117,9 +108,7 @@ function WhiteHorse(options) {
     var modulesDir = path.join(basedir, directory);
 
     var walker = new DirectoryWalker({
-      fileFilter: function (name, cb) {
-        cb(null, path.extname(name) === '.js');
-      }
+      fileFilter: Nodash.async(Nodash.compose(Nodash.eq('.js'), path.extname))
     });
     
     var errors = [];
@@ -162,9 +151,7 @@ function WhiteHorse(options) {
       dependencies = Array.isArray(thing.$inject) ?
           thing.$inject : lib.getParameters(thing);
     }
-    var isAsync = dependencies.some(function (dependency) {
-      return dependency === doneModuleName;
-    });
+    var isAsync = Nodash.any(Nodash.eq(doneModuleName));
 
     var module = {
       name: name,
