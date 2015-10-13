@@ -1,18 +1,23 @@
-# white-horse
+white-horse
+===========
 
 [![Build Status](https://travis-ci.org/scravy/white-horse.svg?branch=master)](https://travis-ci.org/scravy/white-horse)
+[![Dependencies](https://david-dm.org/scravy/white-horse.svg)](https://david-dm.org/scravy/white-horse#info=dependencies&view=table)
+[![Dependencies](https://david-dm.org/scravy/white-horse/dev-status.svg)](https://david-dm.org/scravy/white-horse#info=devDependencies&view=table)
 
 Simple, light-weight dependency injection for NodeJS that supports modules which load asynchronously.
 
 
-# Usage
+Usage
+-----
 
     npm install --save white-horse
 
 For examples see [the examples directory](examples/).
 
 
-# API
+API
+---
 
 ```JavaScript
 var container = new WhiteHorse();
@@ -37,7 +42,8 @@ container.register('mainModule', function (file, path, fs, http) {
 Registers a module with the container.
 
 
-### use(npmPackageName)
+use(npmPackageName)
+-------------------
 
 ```JavaScript
 container.use('http');
@@ -58,7 +64,8 @@ container.use('file', 'path', 'fs', 'http')
 container.use(['file', 'path', 'fs', 'http'])
 ```
 
-### useAs(npmPackageName, moduleName)
+useAs(npmPackageName, moduleName)
+---------------------------------
 
 ```JavaScript```
 container.useAs('white-horse', WhiteHorse);
@@ -69,7 +76,8 @@ if you wand to use an npm package that contains dashes or dots in its
 name.
 
 
-### init(callback)
+init(callback)
+--------------
 
 ```JavaScript
 container.init(function (err) {
