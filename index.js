@@ -7,23 +7,14 @@ var path = require('path');
 var EventEmitter = require('events').EventEmitter;
 var DirectoryWalker = require('directorywalker');
 var toposort = require('toposort');
+var Nodash = require('nodash');
 
 var doneModuleName = '$done';
-
-function compose() {
-  var fs = Array.prototype.slice.call(arguments);
-  return function (arg) {
-    fs.forEach(function (f) {
-      arg = f(arg);
-    });
-    return arg;
-  };
-}
 
 function orderDependencies(modules, injectors) {
   var edges = [];
 
-  Object.keys(modules).forEach(function (moduleName) {
+  Nodash.each(function (module, moduleName) {
     var module = modules[moduleName];
     edges.push([ '', moduleName ]);
     module.dependencies.forEach(function (dependency) {
@@ -31,7 +22,7 @@ function orderDependencies(modules, injectors) {
         edges.push([ dependency, moduleName ]);
       }
     });
-  });
+  }, modules);
 
   var result = toposort(edges);
   result.shift();
@@ -62,23 +53,24 @@ function WhiteHorse(options) {
   }
 
   if (typeof options.npmPostfix === 'string') {
-    npmNameTransformer = compose(function (name) {
+    npmNameTransformer = Nodash.compose(npmNameTransformer, function (name) {
       return name + options.npmPostfix;
-    }, npmNameTransformer);
+    });
   }
 
   if (options.npmNormalize === true) {
-    npmNameTransformer = compose(function (name) {
+    npmNameTransformer = Nodash.compose(npmNameTransformer, function (name) {
       var parts = name.split(/[^a-zA-Z0-9]+/);
       for (var i = 1; i < parts.length; i += 1) {
+        console.log(parts[i].length);
         parts[i] = parts[i][0].toUpperCase() + parts[i].slice(1);
       }
       return parts.join('');
-    }, npmNameTransformer);
+    });
   }
 
   if (typeof options.npmNameTransformer === 'function') {
-    npmNameTransformer = compose(options.npmNameTransformer, npmNameTransformer);
+    npmNameTransformer = Nodash.compose(npmNameTransformer, options.npmNameTransformer);
   }
 
   
@@ -162,9 +154,9 @@ function WhiteHorse(options) {
       dependencies = Array.isArray(thing.$inject) ?
           thing.$inject : lib.getParameters(thing);
     }
-    var isAsync = dependencies.some(function (dependency) {
+    var isAsync = Nodash.any(function (dependency) {
       return dependency === doneModuleName;
-    });
+    }, dependencies);
 
     var module = {
       name: name,
