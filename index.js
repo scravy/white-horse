@@ -7,28 +7,28 @@ var path = require('path');
 var EventEmitter = require('events').EventEmitter;
 var DirectoryWalker = require('directorywalker');
 var toposort = require('toposort');
-var Nodash = require('nodash');
+var $ = require('nodash');
 
 var doneModuleName = '$done';
 
 function npmNameTransformerFromOptions(options) {
 
-  var npmNameTransformer = Nodash.id;
+  var npmNameTransformer = $.id;
 
-  if (Nodash.isString(options.npmPrefix)) {
+  if ($.isString(options.npmPrefix)) {
     npmNameTransformer = function (name) {
       return options.npmPrefix + name;
     };
   }
 
-  if (Nodash.isString(options.npmPostfix)) {
-    npmNameTransformer = Nodash.compose(npmNameTransformer, function (name) {
+  if ($.isString(options.npmPostfix)) {
+    npmNameTransformer = $.compose(npmNameTransformer, function (name) {
       return name + options.npmPostfix;
     });
   }
 
   if (options.npmNormalize === true) {
-    npmNameTransformer = Nodash.compose(npmNameTransformer, function (name) {
+    npmNameTransformer = $.compose(npmNameTransformer, function (name) {
       var parts = name.split(/[^a-zA-Z0-9]+/);
       for (var i = 1; i < parts.length; i += 1) {
         parts[i] = parts[i][0].toUpperCase() + parts[i].slice(1);
@@ -37,8 +37,8 @@ function npmNameTransformerFromOptions(options) {
     });
   }
 
-  if (Nodash.isFunction(options.npmNameTransformer)) {
-    npmNameTransformer = Nodash.compose(npmNameTransformer, options.npmNameTransformer);
+  if ($.isFunction(options.npmNameTransformer)) {
+    npmNameTransformer = $.compose(npmNameTransformer, options.npmNameTransformer);
   }
 
   return npmNameTransformer;
@@ -47,7 +47,7 @@ function npmNameTransformerFromOptions(options) {
 function orderDependencies(modules, injectors) {
   var edges = [];
 
-  Nodash.each(function (module, moduleName) {
+  $.each(function (module, moduleName) {
     var module = modules[moduleName];
     edges.push([ '', moduleName ]);
     module.dependencies.forEach(function (dependency) {
@@ -152,11 +152,11 @@ function WhiteHorse(options) {
   this.register = function (name, thing) {
 
     var dependencies = [];
-    if (Nodash.isFunction(thing)) {
+    if ($.isFunction(thing)) {
       dependencies = Array.isArray(thing.$inject) ?
           thing.$inject : lib.getParameters(thing);
     }
-    var isAsync = Nodash.any(function (dependency) {
+    var isAsync = $.any(function (dependency) {
       return dependency === doneModuleName;
     }, dependencies);
 
@@ -168,7 +168,7 @@ function WhiteHorse(options) {
       initialized: false
     };
 
-    if (Nodash.isFunction(thing)) {
+    if ($.isFunction(thing)) {
       module.factory = thing;
       module.factory.$name = name;
     } else {
@@ -280,16 +280,16 @@ function WhiteHorse(options) {
 
   this.use = function (npm) {
     if (arguments.length === 1) {
-      if (Nodash.isArray(npm)) {
+      if ($.isArray(npm)) {
         npm.forEach(function (val) {
           self.use(val);
         });
-      } else if (Nodash.isString(npm)) {
+      } else if ($.isString(npm)) {
         var alias = npmNameTransformer(npm);
         self.useAs(npm, alias);
-      } else if (Nodash.isObject(npm)) {
-        if (Nodash.isObject(npm.dependencies)) {
-          self.use(Nodash.keys(npm.dependencies));
+      } else if ($.isObject(npm)) {
+        if ($.isObject(npm.dependencies)) {
+          self.use($.keys(npm.dependencies));
         }
       }
     } else {
@@ -310,7 +310,7 @@ function WhiteHorse(options) {
 
   this.inject = function (func, callback) {
 
-    var injections = Nodash.isArray(func.$inject) ?
+    var injections = $.isArray(func.$inject) ?
           func.$inject : lib.getParameters(func);
 
     return self.injectWith(injections, func, callback);    
@@ -319,13 +319,13 @@ function WhiteHorse(options) {
 
   this.injectWith = function (dependencies, func, callback) {
 
-    if (!Nodash.isArray(dependencies)) {
+    if (!$.isArray(dependencies)) {
       throw new TypeError('`dependencies` must be an array.');
     }
-    if (!Nodash.isFunction(func)) {
+    if (!$.isFunction(func)) {
       throw new TypeError('`func` must be a function.');
     }
-    if (!Nodash.isFunction(callback)) {
+    if (!$.isFunction(callback)) {
       callback = null;
     }
 
@@ -399,7 +399,7 @@ function WhiteHorse(options) {
     if (returnOrdered) {
       return orderDependencies(modules, injectors);
     }
-    return Nodash.keys(modules);
+    return $.keys(modules);
   };
 }
 
