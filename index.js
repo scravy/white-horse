@@ -11,6 +11,40 @@ var Nodash = require('nodash');
 
 var doneModuleName = '$done';
 
+function npmNameTransformerFromOptions(options) {
+
+  var npmNameTransformer = Nodash.id;
+
+  if (Nodash.isString(options.npmPrefix)) {
+    npmNameTransformer = function (name) {
+      return options.npmPrefix + name;
+    };
+  }
+
+  if (Nodash.isString(options.npmPostfix)) {
+    npmNameTransformer = Nodash.compose(npmNameTransformer, function (name) {
+      return name + options.npmPostfix;
+    });
+  }
+
+  if (options.npmNormalize === true) {
+    npmNameTransformer = Nodash.compose(npmNameTransformer, function (name) {
+      var parts = name.split(/[^a-zA-Z0-9]+/);
+      for (var i = 1; i < parts.length; i += 1) {
+        console.log(parts[i].length);
+        parts[i] = parts[i][0].toUpperCase() + parts[i].slice(1);
+      }
+      return parts.join('');
+    });
+  }
+
+  if (Nodash.isFunction(options.npmNameTransformer)) {
+    npmNameTransformer = Nodash.compose(npmNameTransformer, options.npmNameTransformer);
+  }
+
+  return npmNameTransformer;
+}
+
 function orderDependencies(modules, injectors) {
   var edges = [];
 
@@ -42,38 +76,7 @@ function WhiteHorse(options) {
 
   var nothing = {};
   var modules = {};
-
-  
-  var npmNameTransformer = function (name) { return name; };
-
-  if (typeof options.npmPrefix === 'string') {
-    npmNameTransformer = function (name) {
-      return options.npmPrefix + name;
-    };
-  }
-
-  if (typeof options.npmPostfix === 'string') {
-    npmNameTransformer = Nodash.compose(npmNameTransformer, function (name) {
-      return name + options.npmPostfix;
-    });
-  }
-
-  if (options.npmNormalize === true) {
-    npmNameTransformer = Nodash.compose(npmNameTransformer, function (name) {
-      var parts = name.split(/[^a-zA-Z0-9]+/);
-      for (var i = 1; i < parts.length; i += 1) {
-        console.log(parts[i].length);
-        parts[i] = parts[i][0].toUpperCase() + parts[i].slice(1);
-      }
-      return parts.join('');
-    });
-  }
-
-  if (typeof options.npmNameTransformer === 'function') {
-    npmNameTransformer = Nodash.compose(npmNameTransformer, options.npmNameTransformer);
-  }
-
-  
+  var npmNameTransformer = npmNameTransformerFromOptions(options);
   var injectors = {};
 
   if (typeof options.injectors === 'object') {
