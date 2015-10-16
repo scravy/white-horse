@@ -31,7 +31,6 @@ function npmNameTransformerFromOptions(options) {
     npmNameTransformer = Nodash.compose(npmNameTransformer, function (name) {
       var parts = name.split(/[^a-zA-Z0-9]+/);
       for (var i = 1; i < parts.length; i += 1) {
-        console.log(parts[i].length);
         parts[i] = parts[i][0].toUpperCase() + parts[i].slice(1);
       }
       return parts.join('');
