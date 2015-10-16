@@ -152,7 +152,7 @@ function WhiteHorse(options) {
   this.register = function (name, thing) {
 
     var dependencies = [];
-    if (typeof thing === 'function') {
+    if (Nodash.isFunction(thing)) {
       dependencies = Array.isArray(thing.$inject) ?
           thing.$inject : lib.getParameters(thing);
     }
@@ -168,7 +168,7 @@ function WhiteHorse(options) {
       initialized: false
     };
 
-    if (typeof thing === 'function') {
+    if (Nodash.isFunction(thing)) {
       module.factory = thing;
       module.factory.$name = name;
     } else {
@@ -280,16 +280,16 @@ function WhiteHorse(options) {
 
   this.use = function (npm) {
     if (arguments.length === 1) {
-      if (Array.isArray(npm)) {
+      if (Nodash.isArray(npm)) {
         npm.forEach(function (val) {
           self.use(val);
         });
-      } else if (typeof npm === 'string') {
+      } else if (Nodash.isString(npm)) {
         var alias = npmNameTransformer(npm);
         self.useAs(npm, alias);
-      } else if (typeof npm === 'object') {
-        if (typeof npm.dependencies === 'object') {
-          self.use(Object.keys(npm.dependencies));
+      } else if (Nodash.isObject(npm)) {
+        if (Nodash.isObject(npm.dependencies)) {
+          self.use(Nodash.keys(npm.dependencies));
         }
       }
     } else {
@@ -310,7 +310,7 @@ function WhiteHorse(options) {
 
   this.inject = function (func, callback) {
 
-    var injections = Array.isArray(func.$inject) ?
+    var injections = Nodash.isArray(func.$inject) ?
           func.$inject : lib.getParameters(func);
 
     return self.injectWith(injections, func, callback);    
@@ -319,13 +319,13 @@ function WhiteHorse(options) {
 
   this.injectWith = function (dependencies, func, callback) {
 
-    if (!Array.isArray(dependencies)) {
+    if (!Nodash.isArray(dependencies)) {
       throw new TypeError('`dependencies` must be an array.');
     }
-    if (typeof func !== 'function') {
+    if (!Nodash.isFunction(func)) {
       throw new TypeError('`func` must be a function.');
     }
-    if (typeof callback !== 'function') {
+    if (!Nodash.isFunction(callback)) {
       callback = null;
     }
 
@@ -399,7 +399,7 @@ function WhiteHorse(options) {
     if (returnOrdered) {
       return orderDependencies(modules, injectors);
     }
-    return Object.keys(modules);
+    return Nodash.keys(modules);
   };
 }
 
