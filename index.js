@@ -48,7 +48,6 @@ function orderDependencies(modules, injectors) {
   var edges = [];
 
   $.each(function (module, moduleName) {
-    var module = modules[moduleName];
     edges.push([ '', moduleName ]);
     module.dependencies.forEach(function (dependency) {
       if (dependency !== doneModuleName && !injectors[dependency]) {
