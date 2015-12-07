@@ -22,7 +22,7 @@ function errorHandler(err) {
   process.exit(1);
 }
 
-var sources = [ 'index.js', 'Module.js', 'lib/**/*.js' ];
+var sources = [ 'index.js', 'Module.js', 'WhiteHorse.js', 'Options.js', 'lib/**/*.js' ];
 
 gulp.task('lint', function (done) {
   gulp.src([ '*.js', 'lib/**/*.js', 'test/**/*.js' ])

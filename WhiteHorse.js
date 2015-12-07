@@ -25,20 +25,47 @@ function WhiteHorse(root, options) {
   var self = this;
 
   this.register = function register(name, factory) {
-    this.modules[name] = new Module(factory);
+    modules[name] = new Module(factory);
     return self;
   };
   
   this.inject = function inject(func, callback) {
-    return new Module(func).getInstance(self, callback);
+    new Module(func).getInstance(self, callback);
   };
-
+ 
   this.injectWith = function injectWith(func, dependencies, callback) {
     if (!$.isFunction(func)) {
       throw new TypeError("`func' must be a function.");
     }
+
+    var args = [];
+
+    try {
+      var result = func.apply(self, args);
+      setImmediate(callback.bind(null, null, result));
+    } catch (err) {
+      setImmediate(callback.bind(null, err));
+    }
   };
-  
+
+  this.get = function get(name, callback) {
+    var module = self.getModule(name);
+    
+    if (!module) {
+      setImmediate(callback.bind(null, "no module named `" + name + "' registered."));
+    } else {
+      module.getInstance(self, callback);
+    }
+  };
+
+  this.getModule = function getModule(name) {
+    if (Object.prototype.hasOwnProperty.call(modules, name)) {
+      return modules[name];
+    } else {
+      return undefined;
+    }
+  };
+     
   this.use = function use(arg) {
     if (arguments.length === 1) {
       if ($.isArray(arg)) {
