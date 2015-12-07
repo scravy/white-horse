@@ -4,20 +4,23 @@
   "description": "Simple, light-weight dependency injection for NodeJS.",
   "main": "index.js",
   "scripts": {
-    "test": "jshint *.js lib/*.js"
+    "test": "gulp test"
   },
   "author": "Julian Fleischer <tirednesscankill@warhog.net>",
   "license": "ISC",
   "dependencies": {
+    "chalk": "^1.1.1",
     "directorywalker": "^1.0.2",
-    "esprima": "^2.6.0",
+    "esprima": "^2.7.0",
     "nodash": "^0.12.0",
     "toposort": "^0.2.12"
   },
   "devDependencies": {
     "gulp": "^3.9.0",
-    "gulp-jshint": "^1.11.2",
-    "gulp-mocha": "^2.1.3",
+    "gulp-istanbul": "^0.10.3",
+    "gulp-istanbul-enforcer": "^1.0.3",
+    "gulp-jshint": "^2.0.0",
+    "gulp-mocha": "^2.2.0",
     "jshint": "^2.8.0"
   }
 }
