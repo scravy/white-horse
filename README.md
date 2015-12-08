@@ -7,8 +7,55 @@
 
 Simple, light-weight dependency injection for NodeJS that supports modules which load asynchronously.
 
+Usage
+-----
 
+    npm install white-horse
+   
+```JavaScript
+    WhiteHorse()
+      .register('oneModule', function () {
+        return "l";
+      })
+      .register('anotherModule', function (oneModule, yetAnotherModule) {
+        return "He" + oneModule + yetAnotherModule;
+      })
+      .register('yetAnotherModule', function (oneModule, $done) {
+        $done(null, oneModule + "o");
+      })
+      .inject(function (anotherModule) {
+        console.log(anotherModule);
+      }, function (err) {
+        console.error(err);
+      });
+```
+    
+```JavaScript
+    WhiteHorse(__dirname)
+      .use(require('./package.json'))
+      .scan('modules', function (main) {
+        main.run();
+      }, function (error) {
+        console.log("Aww snap:", error);
+      });
+```
 
+API
+---
+
+### `register(name, module)`
+
+### `get(name, callback)`
+
+### `use(npmModule)`
+
+### `useAs(npmModule, alias)`
+
+### `scan(directory, onSuccess, onError)`
+
+### `inject(function, callback)`
+
+### `injectWith(function, dependencies, callback)`
 
 License
 -------

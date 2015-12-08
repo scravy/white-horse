@@ -20,6 +20,16 @@ function WhiteHorse(root, options) {
   options = options || {};
 
   var modules = {};
+  var loaders = {
+    '.js': function (filename, callback) {
+      try {
+        var module = require(filename);
+        setImmediate(callback.bind(null, null, module));
+      } catch (err) {
+        setImmediate(callback.bind(null, err));
+      }
+    }
+  };
 
   $.each(function (special) {
     modules[special] = new Module();
@@ -38,7 +48,7 @@ function WhiteHorse(root, options) {
  
   this.injectWith = function injectWith(func, dependencies, callback) {
 
-    var name = arguments[3]; // internal parameter
+    var name  = arguments[3]; // internal parameter
 
     var args = {};
     var fulfilled = 0;
@@ -54,7 +64,8 @@ function WhiteHorse(root, options) {
       }
       if (fulfilled === dependencies.length + 1) {
         if ($.length(errors) > 0) {
-          setImmediate(callback.bind(null, { dependenciesFailed: errors, module: name }));
+          setImmediate(callback.bind(null,
+              { dependenciesFailed: errors }));
         } else {
           var argsArray = $.map(function (dep) {
             return args[dep];
@@ -65,7 +76,7 @@ function WhiteHorse(root, options) {
               setImmediate(callback.bind(null, null, result));
             }
           } catch (err) {
-            setImmediate(callback.bind(null, { initializationFailed: err, module: name }));
+            setImmediate(callback.bind(null, { initializationFailed: err, }));
           }
         }
       }
@@ -77,7 +88,7 @@ function WhiteHorse(root, options) {
           isAsync = true;
           done(dep, null, function (err, result) {
             if (err) {
-              setImmediate(callback.bind(null, { initializationFailed: err, module: name }));
+              setImmediate(callback.bind(null, { initializationFailed: err }));
             } else {
               setImmediate(callback.bind(null, null, result));
             }
@@ -112,13 +123,15 @@ function WhiteHorse(root, options) {
     var allDependencies = lib.getDependencies(self.getModule, name);
     var missingDependencies = $.keys($.filter($.isNull, allDependencies));
     if (missingDependencies.length > 0) {
-      setImmediate(callback.bind(null, { module: name, missingDependencies: missingDependencies }));
+      setImmediate(callback.bind(null,
+          { module: name, missingDependencies: missingDependencies }));
       return;
     }
 
-    var cyclicDependencies = lib.checkDependencies(allDependencies);
+    var cyclicDependencies = lib.checkDependencies(allDependencies, name);
     if (cyclicDependencies.length > 0) {
-      setImmediate(callback.bind(null, { module: name, cyclicDependencies: cyclicDependencies }));
+      setImmediate(callback.bind(null,
+          { module: name, cyclicDependencies: cyclicDependencies }));
       return;
     }
    
@@ -136,15 +149,15 @@ function WhiteHorse(root, options) {
   this.use = function use(arg) {
     if (arguments.length === 1) {
       if ($.isArray(arg)) {
-        $.each(self.use, arg);
+        $.each(function (a) {
+          self.use(a);
+        }, arg);
       } else if ($.isString(arg)) {
         //var alias = npmNameTransformer(arg);
         var alias = arg;
         self.useAs(arg, alias);
-      } else if ($.isObject(arg)) {
-        if ($.isObject(arg.dependencies)) {
-          self.use($.keys(arg.dependencies));
-        }
+      } else if ($.isObject(arg) && $.isObject(arg.dependencies)) {
+        self.use($.keys(arg.dependencies));
       }
     } else {
       self.use([].splice.call(arguments, 0));
@@ -163,16 +176,77 @@ function WhiteHorse(root, options) {
           $.isObject(module.$modules)) {
         $.each($.flip(self.register), module.$modules);
         return self;
+      } else if ($.isObject(module) &&
+          $.eq($.keys(module), [ '$loaders' ]) &&
+          $.isObject(module.$loaders)) {
+        $.each(function (loader, extension) {
+          loaders[extension] = loader;
+        }, module.$loaders);
       } else {
         factory = $.idf(module);
       }
     } catch (err) {
-      factory = function () {
-        throw err;
+      factory = function ($done) {
+        $done({ module: name, error: err });
       };
     }
     self.register(alias, factory);
     return self;
+  };
+  
+  this.scan = function scan(directory, callback, onError) {
+    var modulesDir = root ? path.join(root, directory) : directory;
+    var walker = new DirectoryWalker();
+    var errors = [];
+    
+    if (!$.isFunction(onError)) {
+      onError = function (error) {
+        throw error;
+      };
+    }
+    
+    function mkError(filename, error) {
+      errors.push({ loadingFailed: filename, error: error });
+    }
+    
+    walker.on('error', mkError);
+    
+    walker.on('file', function (filename) {
+      var extension  = path.extname(filename);
+      if (!loaders[extension]) {
+        return;
+      }
+      var relative   = path.relative(modulesDir, filename);
+      var modulePath = path.join(path.dirname(relative), path.basename(relative, extension));
+      var moduleName = modulePath.split(path.sep).join('/');
+      try {      
+        loaders[extension](filename, function (err, module) {
+          if (err) {
+            mkError(filename, err);
+          } else {
+            self.register(moduleName, module);
+          }
+        });
+      } catch (err) {
+        mkError(filename, err);
+      }
+    });
+    
+    walker.on('end', function () {
+      setImmediate(function () {
+        if (errors.length > 0) {
+          setImmediate(onError.bind(null, { scanningDirectoryFailed: directory, errors: errors }));
+        } else {  
+          self.inject(callback, function (err) {
+            if (err) {
+              setImmediate(onError.bind(null, err));
+            }
+          });
+        }
+      });
+    });
+    
+    walker.walk(modulesDir);
   };
 }
 

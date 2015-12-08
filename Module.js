@@ -49,7 +49,9 @@ module.exports = function Module(factory, name) {
             _error = err;
             callback(err);
           } else {
-            _instance = instance;
+            if (_isSingleton) {
+              _instance = instance;
+            }
             callback(null, instance);
           }
         }, _name);

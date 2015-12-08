@@ -25,7 +25,7 @@ function errorHandler(err) {
 var sources = [ 'index.js', 'Module.js', 'WhiteHorse.js', 'Options.js', 'lib/**/*.js' ];
 
 gulp.task('lint', function (done) {
-  gulp.src([ '*.js', 'lib/**/*.js', 'test/**/*.js' ])
+  gulp.src([ '*.js', 'lib/**/*.js', 'test/*.js' ])
       .pipe(jshint())
       .pipe(jshint.reporter('default'))
       .pipe(jshint.reporter('fail'))
@@ -39,14 +39,20 @@ gulp.task('coverage', [ 'lint' ], function (done) {
       .pipe(istanbul.hookRequire())
       .on('error', errorHandler)
       .on('finish', function () {
-        gulp.src('test/**/*.js')
+        gulp.src('test/*.js')
             .pipe(mocha())
             .pipe(istanbul.writeReports({ dir: 'dist/coverage/' }))
             .on('finish', done);
       });
 });
 
-gulp.task('test', [ 'coverage' ], function (done) {
+gulp.task('test', [ 'lint' ], function (done) {
+  gulp.src('test/*.js')
+      .pipe(mocha())
+      .on('finish', done);
+});
+
+gulp.task('check', [ 'coverage' ], function (done) {
   gulp.src('.')
       .pipe(enforcer({
         thresholds: thresholds,
@@ -57,6 +63,6 @@ gulp.task('test', [ 'coverage' ], function (done) {
       .on('finish', done);
 });
 
-gulp.task('default', [ 'test' ]);
+gulp.task('default', [ 'check' ]);
 
 
