@@ -28,6 +28,18 @@ describe('WhiteHorse', function () {
     assert(container.getModule("something") instanceof WhiteHorse.Module);
   });
 
+  it('inject() should inject $module as undefined', function (done) {
+    var container = new WhiteHorse("someroot");
+    container.inject(function ($module) {
+      assert.equal($module, undefined);
+      return 1337;
+    }, function (err, result) {
+      assert.equal(err, null);
+      assert.equal(result, 1337);
+      done();
+    });
+  });
+
   it('inject() should inject $root', function (done) {
     var container = new WhiteHorse("someroot");
     container.inject(function ($root) {
@@ -52,5 +64,24 @@ describe('WhiteHorse', function () {
     });
   });
   
+  it('use() should register an npm module', function (done) {
+    var container = new WhiteHorse("someroot").use('nodash');
+    container.inject(function (nodash) {
+      assert(nodash);
+    }, function (err, result) {
+      assert.equal(err, null);
+      done();
+    });
+  });
+  
+  it('useAs() should register an npm module', function (done) {
+    var container = new WhiteHorse("someroot").useAs('nodash', '$');
+    container.inject(function ($) {
+      assert($);
+    }, function (err, result) {
+      assert.equal(err, null);
+      done();
+    });
+  });
 
 });

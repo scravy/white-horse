@@ -33,7 +33,9 @@ function WhiteHorse(root, options) {
     new Module(func).getInstance(self, callback);
   };
  
-  this.injectWith = function injectWith(func, dependencies, callback, name) {
+  this.injectWith = function injectWith(func, dependencies, callback) {
+
+    var name = arguments[3]; // internal parameter
 
     var args = {};
     var fulfilled = 0;
@@ -44,10 +46,10 @@ function WhiteHorse(root, options) {
       fulfilled += 1;
       if (err) {
         errors[dep] = err;
-      } else {
+      } else if (dep) {
         args[dep] = instance;
       }
-      if (fulfilled === dependencies.length) {
+      if (fulfilled === dependencies.length + 1) {
         if ($.length(errors) > 0) {
           setImmediate(callback.bind(null, { dependenciesFailed: errors, module: name }));
         } else {
@@ -71,7 +73,11 @@ function WhiteHorse(root, options) {
         case "$done":
           isAsync = true;
           done(dep, null, function (err, result) {
-            setImmediate(callback.bind(null, err || null, result));
+            if (err) {
+              setImmediate(callback.bind(null, { initializationFailed: err, module: name }));
+            } else {
+              setImmediate(callback.bind(null, null, result));
+            }
           });
           break;
         case "$module":
@@ -84,6 +90,8 @@ function WhiteHorse(root, options) {
           self.get(dep, done.bind(null, dep));
       }
     }, dependencies);
+
+    done(null, null, null);
   };
 
   this.get = function get(name, callback) {
