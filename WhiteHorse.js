@@ -21,6 +21,9 @@ function WhiteHorse(root, options) {
 
   var modules = {};
 
+  $.each(function (special) {
+    modules[special] = new Module();
+  }, [ '$root', '$module', '$done' ]);
   
   var self = this;
 
@@ -70,7 +73,7 @@ function WhiteHorse(root, options) {
 
     $.each(function (dep) {
       switch (dep) {
-        case "$done":
+        case '$done':
           isAsync = true;
           done(dep, null, function (err, result) {
             if (err) {
@@ -80,10 +83,10 @@ function WhiteHorse(root, options) {
             }
           });
           break;
-        case "$module":
+        case '$module':
           done(dep, null, self.getModule(name));
           break;
-        case "$root":
+        case '$root':
           done(dep, null, root);
           break;
         default:
@@ -153,10 +156,10 @@ function WhiteHorse(root, options) {
     var factory;
     try {
       var module = require(name);
-      if ($.isObject(module) && $.eq($.keys(module), [ "$module" ])) {
+      if ($.isObject(module) && $.eq($.keys(module), [ '$module' ])) {
         factory = module.$module;
       } else if ($.isObject(module) &&
-          $.eq($.keys(module), [ "$modules" ]) &&
+          $.eq($.keys(module), [ '$modules' ]) &&
           $.isObject(module.$modules)) {
         $.each($.flip(self.register), module.$modules);
         return self;

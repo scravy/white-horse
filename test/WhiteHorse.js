@@ -76,11 +76,46 @@ describe('WhiteHorse', function () {
   
   it('useAs() should register an npm module', function (done) {
     var container = new WhiteHorse("someroot").useAs('nodash', '$');
-    container.inject(function ($) {
-      assert($);
-    }, function (err, result) {
-      assert.equal(err, null);
-      done();
+    container.get('nodash', function (err, nodash) {
+      assert(err);
+      assert(!nodash);
+
+      container.get('$', function (err, nodash) {
+        assert.equal(err, null);
+        assert(nodash);
+      });
+
+      container.inject(function ($) {
+        assert($);
+      }, function (err, result) {
+        assert.equal(err, null);
+        done();
+      });
+    });
+  });
+
+  it('use() should honor $module', function (done) {
+    var container = new WhiteHorse("someroot")
+      .useAs(require.resolve("./someModule.js"), "someModule")
+      .register('dependsOn', 4711)
+      .get("someModule", function (err, mod) {
+        assert.equal(mod, 4712);
+        done();
+      });
+  });
+
+  it('use() should honor $modules', function (done) {
+    var container = new WhiteHorse("someroot")
+      .useAs(require.resolve("./someModules.js"), "someModule");
+
+    container.get("hello", function (err, mod) {
+      console.log(err);
+      assert.equal(mod, 20);
+
+      container.get("world", function (err, mod) {
+        assert.equal(mod, 10);
+        done();
+      });
     });
   });
 
