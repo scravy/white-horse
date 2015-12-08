@@ -57,6 +57,6 @@ gulp.task('test', [ 'coverage' ], function (done) {
       .on('finish', done);
 });
 
-gulp.task('default', [ 'lint' ]);
+gulp.task('default', [ 'test' ]);
 
 

@@ -25,7 +25,7 @@ function WhiteHorse(root, options) {
   var self = this;
 
   this.register = function register(name, factory) {
-    modules[name] = new Module(factory);
+    modules[name] = new Module(factory, name);
     return self;
   };
   
@@ -33,39 +33,95 @@ function WhiteHorse(root, options) {
     new Module(func).getInstance(self, callback);
   };
  
-  this.injectWith = function injectWith(func, dependencies, callback) {
-    if (!$.isFunction(func)) {
-      throw new TypeError("`func' must be a function.");
+  this.injectWith = function injectWith(func, dependencies, callback, name) {
+
+    var args = {};
+    var fulfilled = 0;
+    var errors = {};
+    var isAsync = false;
+
+    function done(dep, err, instance) {
+      fulfilled += 1;
+      if (err) {
+        errors[dep] = err;
+      } else {
+        args[dep] = instance;
+      }
+      if (fulfilled === dependencies.length) {
+        if ($.length(errors) > 0) {
+          setImmediate(callback.bind(null, { dependenciesFailed: errors, module: name }));
+        } else {
+          var argsArray = $.map(function (dep) {
+            return args[dep];
+          }, dependencies);
+          try {
+            var result = func.apply(self, argsArray);
+            if (!isAsync) {
+              setImmediate(callback.bind(null, null, result));
+            }
+          } catch (err) {
+            setImmediate(callback.bind(null, { initializationFailed: err, module: name }));
+          }
+        }
+      }
     }
 
-    var args = [];
-
-    try {
-      var result = func.apply(self, args);
-      setImmediate(callback.bind(null, null, result));
-    } catch (err) {
-      setImmediate(callback.bind(null, err));
-    }
+    $.each(function (dep) {
+      switch (dep) {
+        case "$done":
+          isAsync = true;
+          done(dep, null, function (err, result) {
+            setImmediate(callback.bind(null, err || null, result));
+          });
+          break;
+        case "$module":
+          done(dep, null, self.getModule(name));
+          break;
+        case "$root":
+          done(dep, null, root);
+          break;
+        default:
+          self.get(dep, done.bind(null, dep));
+      }
+    }, dependencies);
   };
 
   this.get = function get(name, callback) {
     var module = self.getModule(name);
-    
     if (!module) {
-      setImmediate(callback.bind(null, "no module named `" + name + "' registered."));
-    } else {
-      module.getInstance(self, callback);
+      setImmediate(callback.bind(null, { notFound: name }));
+      return;
     }
+  
+    if (module.isInitialized()) {
+      module.getInstance(self, callback);
+      return;
+    }
+
+    var allDependencies = lib.getDependencies(self.getModule, name);
+    var missingDependencies = $.keys($.filter($.isNull, allDependencies));
+    if (missingDependencies.length > 0) {
+      setImmediate(callback.bind(null, { module: name, missingDependencies: missingDependencies }));
+      return;
+    }
+
+    var cyclicDependencies = lib.checkDependencies(allDependencies);
+    if (cyclicDependencies.length > 0) {
+      setImmediate(callback.bind(null, { module: name, cyclicDependencies: cyclicDependencies }));
+      return;
+    }
+   
+    module.getInstance(self, callback);
   };
 
   this.getModule = function getModule(name) {
-    if (Object.prototype.hasOwnProperty.call(modules, name)) {
+    if ($.isString(name) && Object.prototype.hasOwnProperty.call(modules, name)) {
       return modules[name];
     } else {
       return undefined;
     }
   };
-     
+
   this.use = function use(arg) {
     if (arguments.length === 1) {
       if ($.isArray(arg)) {

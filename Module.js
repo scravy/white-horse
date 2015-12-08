@@ -4,7 +4,9 @@
 var lib = require('./lib');
 var $ = require('nodash');
 
-module.exports = function Module(factory) {
+module.exports = function Module(factory, name) {
+
+  var _name = name;
 
   var _isInitialized = false;
 
@@ -30,7 +32,6 @@ module.exports = function Module(factory) {
     }
     _isSingleton = factory.$singleton !== false;
   }
-  Object.freeze(_dependencies);
 
   var _isAsync = $.any($.eq("$done"), _dependencies);
 
@@ -38,12 +39,12 @@ module.exports = function Module(factory) {
   var self = this;
 
   this.getInstance = function getInstance(container, callback) {
-    if (_isSingleton && _isInitialized) {
+    if (_isInitialized) {
       setImmediate(callback.bind(null, _error, _instance));
     } else {
       setImmediate(function () {
         container.injectWith(_factory, _dependencies, function (err, instance) {
-          _isInitialized = true;
+          _isInitialized = _isSingleton;
           if (err) {
             _error = err;
             callback(err);
@@ -51,7 +52,7 @@ module.exports = function Module(factory) {
             _instance = instance;
             callback(null, instance);
           }
-        });
+        }, _name);
       });
     }
   };
@@ -61,5 +62,5 @@ module.exports = function Module(factory) {
   this.isAsync = $.idf(_isAsync);
   this.isInitialized = function () { return _isInitialized; };
   this.isSingleton = $.idf(_isSingleton);
-
+  this.name = $.idf(_name);
 };
