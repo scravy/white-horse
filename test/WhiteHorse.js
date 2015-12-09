@@ -357,4 +357,37 @@ describe('WhiteHorse', function () {
     assert(container.getModule('c').isSingleton());
     assert(!container.getModule('d').isSingleton());
   });
+  
+  it('should report unhandled errors on scan()', function (done) {
+    var container = new WhiteHorse();
+    container.use(require.resolve('./fixture/jsonLoader.js'));
+    container.on('unhandled_error', function (err) {
+      assert(err);
+      assert(err.scanningDirectoryFailed);
+      assert(err.errors);
+      assert(err.errors[0]);
+      assert(err.errors[0].loadingFailed);
+      assert(err.errors[1]);
+      assert(err.errors[1].loadingFailed);
+      done();
+    });
+    container.scan(__dirname + '/fixture/broken-modules', function (a, b) {
+      assert(false);
+    });
+  });
+  
+  it('should report unhandled errors on inject()', function (done) {
+    var container = new WhiteHorse();
+    container.on('unhandled_error', function (err) {
+      assert(err);
+      assert(err.dependenciesFailed);
+      assert(err.dependenciesFailed.missingDependency);
+      assert.equal(err.dependenciesFailed.missingDependency.notFound, 'missingDependency');
+      done();
+    });
+    container.inject(function (missingDependency) {
+      
+    });
+    container.use({});
+  });
 });

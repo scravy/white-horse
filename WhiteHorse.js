@@ -42,7 +42,11 @@ function WhiteHorse(root, givenOtions) {
   };
   
   this.inject = function inject(func, callback) {
-    new Module(func).getInstance(self, $.isFunction(callback) ? callback : $.id);
+    new Module(func).getInstance(self, $.isFunction(callback) ? callback : function (err) {
+      if (err) {
+        self.emit('unhandled_error', err);
+      }
+    });
   };
  
   this.injectWith = function injectWith(func, dependencies, callback) {
@@ -202,7 +206,7 @@ function WhiteHorse(root, givenOtions) {
     
     if (!$.isFunction(onError)) {
       onError = function (error) {
-        throw error;
+        self.emit('unhandled_error', error);
       };
     }
     
