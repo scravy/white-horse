@@ -298,4 +298,63 @@ describe('WhiteHorse', function () {
       done();
     });
   });
+  
+  it('should inject $module', function (done) {
+    var container = new WhiteHorse()
+      .register('a', function ($module) {
+        return $module;
+      })
+      .register('b', function (a) {
+        return a;
+      })
+      .register('c', function (a) {
+        return a;
+      })
+      .inject(function (b, c) {
+        assert.equal(b, 'b');
+        assert.equal(c, 'c');
+        done();
+      });
+  });
+  
+  it('should inject $module (deep)', function (done) {
+    var container = new WhiteHorse()
+      .register('a', function ($module, d) {
+        return d + $module;
+      })
+      .register('b', function (a) {
+        return a;
+      })
+      .register('c', function (a) {
+        return a;
+      })
+      .register('d', function ($module) {
+        return $module;
+      })
+      .inject(function (b, c) {
+        assert.equal(b, 'ab');
+        assert.equal(c, 'ac');
+        done();
+      });
+  });
+  
+  it('should not regard an injector as a singleton', function () {
+    var container = new WhiteHorse()
+      .register('a', function ($module, d) {
+        return d + $module;
+      })
+      .register('b', function (a) {
+        return a;
+      })
+      .register('c', function (a) {
+        return a;
+      })
+      .register('d', function ($module) {
+        return $module;
+      });
+    assert(!container.getModule('a').isSingleton());
+    assert(container.getModule('b').isSingleton());
+    assert(container.getModule('c').isSingleton());
+    assert(!container.getModule('d').isSingleton());
+  });
 });

@@ -11,14 +11,13 @@ var lib     = require('./lib');
 var Module  = require('./Module');
 var Options = require('./Options');
 
-function WhiteHorse(root, options) {
+function WhiteHorse(root, givenOtions) {
 
   if (!(this instanceof WhiteHorse)) {
     return new WhiteHorse(root, options);
   }
 
-  options = options || {};
-
+  var options = new Options(givenOtions);
   var modules = {};
   var loaders = {
     '.js': function (filename, callback) {
@@ -43,12 +42,13 @@ function WhiteHorse(root, options) {
   };
   
   this.inject = function inject(func, callback) {
-    new Module(func).getInstance(self, callback);
+    new Module(func).getInstance(self, $.isFunction(callback) ? callback : $.id);
   };
  
   this.injectWith = function injectWith(func, dependencies, callback) {
 
-    var name  = arguments[3]; // internal parameter
+    var __name = arguments[3];
+    var __forModule = arguments[4];
 
     var args = {};
     var fulfilled = 0;
@@ -95,13 +95,13 @@ function WhiteHorse(root, options) {
           });
           break;
         case '$module':
-          done(dep, null, self.getModule(name));
+          done(dep, null, __forModule);
           break;
         case '$root':
           done(dep, null, root);
           break;
         default:
-          self.get(dep, done.bind(null, dep));
+          self.get(dep, done.bind(null, dep), __name);
       }
     }, dependencies);
 
@@ -109,6 +109,8 @@ function WhiteHorse(root, options) {
   };
 
   this.get = function get(name, callback) {
+    
+    var __forModule = arguments[2];
     var module = self.getModule(name);
     if (!module) {
       setImmediate(callback.bind(null, { notFound: name }));
@@ -135,7 +137,7 @@ function WhiteHorse(root, options) {
       return;
     }
    
-    module.getInstance(self, callback);
+    module.getInstance(self, callback, __forModule);
   };
 
   this.getModule = function getModule(name) {
@@ -153,8 +155,7 @@ function WhiteHorse(root, options) {
           self.use(a);
         }, arg);
       } else if ($.isString(arg)) {
-        //var alias = npmNameTransformer(arg);
-        var alias = arg;
+        var alias = options.npmNameTransformer(arg);
         self.useAs(arg, alias);
       } else if ($.isObject(arg) && $.isObject(arg.dependencies)) {
         self.use($.keys(arg.dependencies));

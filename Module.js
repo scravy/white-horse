@@ -32,13 +32,18 @@ module.exports = function Module(factory, name) {
     }
     _isSingleton = factory.$singleton !== false;
   }
+  
+  if ($.any($.eq('$module'), _dependencies)) {
+    _isSingleton = false;
+  }
 
-  var _isAsync = $.any($.eq("$done"), _dependencies);
+  var _isAsync = $.any($.eq('$done'), _dependencies);
 
   
   var self = this;
 
   this.getInstance = function getInstance(container, callback) {
+    var __forModule = arguments[2];
     if (_isInitialized) {
       setImmediate(callback.bind(null, _error, _instance));
     } else {
@@ -54,7 +59,7 @@ module.exports = function Module(factory, name) {
             }
             callback(null, instance);
           }
-        }, _name);
+        }, _name, __forModule);
       });
     }
   };
