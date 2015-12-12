@@ -17,7 +17,7 @@ function WhiteHorse(root, givenOtions) {
     return new WhiteHorse(root, options);
   }
 
-  var options = new Options(givenOtions);
+  var options = new Options(givenOtions || root);
   var modules = {};
   var loaders = {
     '.js': function (filename, callback) {
@@ -30,11 +30,21 @@ function WhiteHorse(root, givenOtions) {
     }
   };
 
-  $.each(function (special) {
-    modules[special] = new Module();
-  }, [ '$root', '$module', '$done' ]);
   
   var self = this;
+
+  function init() {
+    
+    $.each(function (special) {
+      modules[special] = new Module();
+    }, [ '$root', '$module', '$done' ]);
+    
+    $.each(function (module) {
+      self.register(module, function () {
+        return require(module);
+      });
+    }, options.autoRegister);
+  }
 
   this.register = function register(name, factory) {
     modules[name] = new Module(factory, name);
@@ -253,6 +263,8 @@ function WhiteHorse(root, givenOtions) {
     
     walker.walk(modulesDir);
   };
+  
+  init();
 }
 
 

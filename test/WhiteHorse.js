@@ -390,4 +390,37 @@ describe('WhiteHorse', function () {
     });
     container.use({});
   });
+  
+  it('should register options.autoRegister modules', function (done) {
+    var container = new WhiteHorse();
+    container.inject(function (path, os, process, timers, console) {
+      assert(path);
+      assert(os);
+      assert(process);
+      assert(timers);
+      assert(timers.setTimeout instanceof Function);
+      assert(timers.setInterval instanceof Function);
+      assert(console);
+      assert(console.log instanceof Function);
+      done();
+    });
+  });
+  
+  
+  it('should process options.autoRegister', function (done) {
+    var container = new WhiteHorse({
+      autoRegister: [ 'path' ]
+    });
+    container.inject(function (path) {
+      assert(path);
+    }, function (err) {
+      assert(!err);
+      container.inject(function (os) {
+        assert(false);
+      }, function (err) {
+        assert.deepEqual(err, { dependenciesFailed: { os: { notFound: 'os' } } });
+        done();
+      });
+    });
+  });
 });

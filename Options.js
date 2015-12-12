@@ -8,6 +8,9 @@ function Options(options) {
 	
   options = options || {};
 	
+  
+  /** options.npmNameTransformer **/
+  
   var npmNameTransformer = $.id;
 
   if ($.isString(options.npmPrefix)) {
@@ -36,7 +39,49 @@ function Options(options) {
     npmNameTransformer = $.compose(npmNameTransformer, options.npmNameTransformer);
   }
 	
-  this.npmNameTransformer = npmNameTransformer;	
+  this.npmNameTransformer = npmNameTransformer;
+  
+  
+  /** options.autoRegister **/
+  
+  var autoRegister = [
+    'assert',
+    'buffer',
+    'child_process',
+    'cluster',
+    'console',
+    'crypto',
+    'dns',
+    'domain',
+    'events',
+    'fs',
+    'http',
+    'https',
+    'net',
+    'os',
+    'path',
+    'process',
+    'punycode',
+    'querystring',
+    'readline',
+    'repl',
+    'stream',
+    'string_decoder',
+    'timers',
+    'tls',
+    'dgram',
+    'url',
+    'util',
+    'v8',
+    'vm',
+    'zlib'
+  ];
+  
+  if ($.isArray(options.autoRegister) && $.all($.isString, options.autoRegister)) {
+    autoRegister = $.clone(options.autoRegister);
+  }
+  
+  this.autoRegister = autoRegister;
 }
 
 module.exports = Options;
