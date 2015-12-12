@@ -106,6 +106,24 @@ describe('WhiteHorse', function () {
     container.injectWith(f, [ '$$path' ]);
   });
   
+  it('should emit unhandled_error when not given a fallback to inject()', function (done) {
+    var container = new WhiteHorse(require);
+    container.on('unhandled_error', function (err) {
+      assert(err.dependenciesFailed);
+      done();
+    });
+    container.inject(function (dependency) {});
+  });
+  
+  it('should emit unhandled_error when not given a fallback to injectWith()', function (done) {
+    var container = new WhiteHorse(require);
+    container.on('unhandled_error', function (err) {
+      assert(err.dependenciesFailed);
+      done();
+    });
+    container.injectWith(function () {}, [ 'dependency' ]);
+  });
+  
   it('getModule() should return undefined if invoked with anything else but a string', function () {
     assert.equal(new WhiteHorse(require).getModule(7), undefined);
   });
