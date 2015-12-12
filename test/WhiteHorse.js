@@ -122,7 +122,7 @@ describe('WhiteHorse', function () {
 
   it('useAs() should honor $module', function (done) {
     var container = new WhiteHorse('someroot')
-      .useAs(require.resolve('./someModule.js'), 'someModule')
+      .useAs(require.resolve('./fixture/someModule.js'), 'someModule')
       .register('dependsOn', 4711)
       .get('someModule', function (err, mod) {
         assert.equal(mod, 4712);
@@ -132,7 +132,7 @@ describe('WhiteHorse', function () {
 
   it('useAs should honor $modules', function (done) {
     var container = new WhiteHorse('someroot')
-      .use(require.resolve('./someModules.js'));
+      .use(require.resolve('./fixture/someModules.js'));
 
     container.get('hello', function (err, mod) {
       assert.equal(mod, 20);
