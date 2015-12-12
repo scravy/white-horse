@@ -63,7 +63,7 @@ describe('Options', function () {
     var options = new Options();
     
     options.autoRegister.forEach(function (module) {
-      require(module);
+      assert(GLOBAL[module] || require(module));
     });
     
     done();

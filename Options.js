@@ -72,7 +72,6 @@ function Options(options) {
     'dgram',
     'url',
     'util',
-    'v8',
     'vm',
     'zlib'
   ];
