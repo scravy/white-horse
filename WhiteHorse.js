@@ -57,7 +57,6 @@ function WhiteHorse(require, givenOptions) {
   };
 
   function init() {
-    
     $.each(function (special) {
       modules[special] = new Module();
     }, [ '$root', '$module', '$done' ]);
@@ -72,11 +71,6 @@ function WhiteHorse(require, givenOptions) {
     }, options.autoRegister);
   }
 
-  this.register = function register(name, factory) {
-    modules[name] = new Module(factory, name);
-    return self;
-  };
-  
   function ensureCallback(callback) {
     return $.isFunction(callback) ? callback : function (err, result) {
       if (err) {
@@ -88,6 +82,11 @@ function WhiteHorse(require, givenOptions) {
       }
     };
   }
+  
+  this.register = function register(name, factory) {
+    modules[name] = new Module(factory, name);
+    return self;
+  };
   
   this.inject = function inject(func, callback) {
     new Module(func).getInstance(self, ensureCallback(callback));
@@ -254,11 +253,7 @@ function WhiteHorse(require, givenOptions) {
     var walker = new DirectoryWalker();
     var errors = [];
     
-    if (!$.isFunction(onError)) {
-      onError = function (error) {
-        self.emit('unhandled_error', error);
-      };
-    }
+    onError = ensureCallback(onError);
     
     function mkError(filename, error) {
       errors.push({ loadingFailed: filename, error: error });
