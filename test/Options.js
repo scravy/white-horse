@@ -58,4 +58,14 @@ describe('Options', function () {
     
     assert.equal(options.npmNameTransformer('asm.js'), 'ASM.JS');
   });
+  
+  it('all options.autoRegister modules actually do exist', function (done) {
+    var options = new Options();
+    
+    options.autoRegister.forEach(function (module) {
+      require(module);
+    });
+    
+    done();
+  });
 });
