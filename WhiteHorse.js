@@ -41,8 +41,8 @@ function WhiteHorse(root, givenOtions) {
     
     $.each(function (module) {
       self.register(module, function () {
-        if (global[module]) {
-          return global[module];
+        if (GLOBAL[module]) {
+          return GLOBAL[module];
         }
         return require(module);
       });
