@@ -41,6 +41,9 @@ function WhiteHorse(root, givenOtions) {
     
     $.each(function (module) {
       self.register(module, function () {
+        if (global[module]) {
+          return global[module];
+        }
         return require(module);
       });
     }, options.autoRegister);
