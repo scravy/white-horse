@@ -77,12 +77,20 @@ function WhiteHorse(require, givenOptions) {
     return self;
   };
   
-  this.inject = function inject(func, callback) {
-    new Module(func).getInstance(self, $.isFunction(callback) ? callback : function (err) {
+  function ensureCallback(callback) {
+    return $.isFunction(callback) ? callback : function (err, result) {
       if (err) {
         self.emit('unhandled_error', err);
+      } else if (typeof result !== 'undefined') {
+        self.emit('warning', {
+          unhandledResult: result
+        });
       }
-    });
+    };
+  }
+  
+  this.inject = function inject(func, callback) {
+    new Module(func).getInstance(self, ensureCallback(callback));
   };
  
   this.injectWith = function injectWith(func, dependencies, callback) {
@@ -95,15 +103,7 @@ function WhiteHorse(require, givenOptions) {
     var errors = {};
     var isAsync = false;
 
-    callback = $.isFunction(callback) ? callback : function (err, result) {
-      if (err) {
-        self.emit('unhandled_error', err);
-      } else {
-        self.emit('warning', {
-          unhandledResult: result
-        });
-      }
-    };
+    callback = ensureCallback(callback);
 
     function done(dep, err, instance) {
       fulfilled += 1;

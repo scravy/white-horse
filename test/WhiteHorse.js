@@ -124,6 +124,15 @@ describe('WhiteHorse', function () {
     container.injectWith(function () {}, [ 'dependency' ]);
   });
   
+  it('should emit a warning when result is not handled in callback in injectWith()', function (done) {
+    var container = new WhiteHorse(require);
+    container.on('warning', function (warning) {
+      assert.equal(warning.unhandledResult, 1337);
+      done();
+    });
+    container.injectWith(function () { return 1337; }, []);
+  });
+  
   it('getModule() should return undefined if invoked with anything else but a string', function () {
     assert.equal(new WhiteHorse(require).getModule(7), undefined);
   });
