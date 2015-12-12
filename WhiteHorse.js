@@ -11,13 +11,39 @@ var lib     = require('./lib');
 var Module  = require('./Module');
 var Options = require('./Options');
 
-function WhiteHorse(root, givenOtions) {
+var myRequire = require;
 
-  if (!(this instanceof WhiteHorse)) {
-    return new WhiteHorse(root, options);
+function WhiteHorse(require, givenOptions) {
+
+  if (!$.isFunction(require) || !$.isFunction(require.resolve)) {
+    throw new TypeError('`require` must be passed in as first argument.');
   }
 
-  var options = new Options(givenOtions || root);
+  if (!(this instanceof WhiteHorse)) {
+    return new WhiteHorse(require, givenOptions);
+  }
+
+  var self = this;
+  
+  function resolve() {
+    for (var i = 0; i < arguments.length; i += 1) {
+      try {
+        return path.dirname(require.resolve(arguments[i]));
+      } catch (err) {
+        self.emit('warning', {
+          triedToResolveRoot: err
+        });
+      }
+    }
+    return null;
+  }
+
+  var root = resolve('.', './package.json', './index.js', '../package.json', '../index.js');
+  if (!root) {
+    root = $.foldl1(lib.findCommonPrefix, $.keys(require.cache));
+  }
+  
+  var options = new Options(givenOptions);
   var modules = {};
   var loaders = {
     '.js': function (filename, callback) {
@@ -29,9 +55,6 @@ function WhiteHorse(root, givenOtions) {
       }
     }
   };
-
-  
-  var self = this;
 
   function init() {
     
@@ -72,6 +95,16 @@ function WhiteHorse(root, givenOtions) {
     var errors = {};
     var isAsync = false;
 
+    callback = $.isFunction(callback) ? callback : function (err, result) {
+      if (err) {
+        self.emit('unhandled_error', err);
+      } else {
+        self.emit('warning', {
+          unhandledResult: result
+        });
+      }
+    };
+
     function done(dep, err, instance) {
       fulfilled += 1;
       if (err) {
@@ -93,7 +126,7 @@ function WhiteHorse(root, givenOtions) {
               setImmediate(callback.bind(null, null, result));
             }
           } catch (err) {
-            setImmediate(callback.bind(null, { initializationFailed: err, }));
+            setImmediate(callback.bind(null, { initializationFailed: err }));
           }
         }
       }
@@ -158,11 +191,15 @@ function WhiteHorse(root, givenOtions) {
   };
 
   this.getModule = function getModule(name) {
-    if ($.isString(name) && Object.prototype.hasOwnProperty.call(modules, name)) {
-      return modules[name];
-    } else {
-      return undefined;
+    if ($.isString(name)) {
+      if (Object.prototype.hasOwnProperty.call(modules, name)) {
+        return modules[name];
+      }
+      if (/^\$\$/.test(name)) {
+        return new Module(require.bind(null, name.substring(2)));
+      }
     }
+    return undefined;
   };
 
   this.use = function use(arg) {
@@ -213,7 +250,7 @@ function WhiteHorse(root, givenOtions) {
   };
   
   this.scan = function scan(directory, callback, onError) {
-    var modulesDir = root ? path.join(root, directory) : directory;
+    var modulesDir = path.join(root, directory);
     var walker = new DirectoryWalker();
     var errors = [];
     

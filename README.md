@@ -13,7 +13,7 @@ Usage
     npm install white-horse
    
 ```JavaScript
-    WhiteHorse()
+    WhiteHorse(require)
       .register('oneModule', function () {
         return "l";
       })
@@ -31,7 +31,7 @@ Usage
 ```
     
 ```JavaScript
-    WhiteHorse(__dirname)
+    WhiteHorse(require)
       .use(require('./package.json'))
       .scan('modules', function (main) {
         main.run();

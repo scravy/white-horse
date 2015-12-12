@@ -4,32 +4,57 @@ describe('WhiteHorse', function () {
   'use strict';
 
   var assert = require('assert');
+  var path = require('path');
   var WhiteHorse = require('../index.js');
 
   it('should be initialized without errors', function () {
-    var container = new WhiteHorse('someroot');
+    var container = new WhiteHorse(require);
     assert(container instanceof WhiteHorse);
+  });
+  
+  it('should throw if require was not passed as first argument', function () {
+    try {
+      new WhiteHorse();
+      assert(false);
+    } catch (err) {
+      assert(err);
+    }
+  });
+  
+  it('should try to guess $root if require did not resolve', function (done) {
+    var requireMock = function () {};
+    requireMock.resolve = function () {
+      throw "";
+    };
+    requireMock.cache = require.cache;
+    new WhiteHorse(requireMock).inject(function ($root) {
+      assert(typeof $root === 'string');
+      assert($root.length > 0);
+      done();
+    }, function (err) {
+      assert.equal(err, null);
+    });
   });
 
   it('should be initialized if used without new as if with new', function () {
     var whiteHorse = WhiteHorse;
-    var container = whiteHorse('someroot');
+    var container = whiteHorse(require);
     assert(container instanceof WhiteHorse);
   });
 
   it('getModule() should return undefined if a module does not exist', function () {
-    var container = new WhiteHorse('someroot');
+    var container = new WhiteHorse(require);
     assert.equal(container.getModule('something'), undefined);
   });
 
   it('getModule() should return a registered module', function () {
-    var container = new WhiteHorse('someroot');
+    var container = new WhiteHorse(require);
     container.register('something', function () {});
     assert(container.getModule('something') instanceof WhiteHorse.Module);
   });
 
   it('inject() should inject $module as undefined', function (done) {
-    var container = new WhiteHorse('someroot');
+    var container = new WhiteHorse(require);
     container.inject(function ($module) {
       assert.equal($module, undefined);
       return 1337;
@@ -41,9 +66,13 @@ describe('WhiteHorse', function () {
   });
 
   it('inject() should inject $root', function (done) {
-    var container = new WhiteHorse('someroot');
+    var mockRequire = function (){};
+    mockRequire.resolve = function () {
+      return 'some/path';
+    };
+    var container = new WhiteHorse(mockRequire);
     container.inject(function ($root) {
-      assert.equal($root, 'someroot');
+      assert.equal($root, 'some');
       return 1337;
     }, function (err, result) {
       assert.equal(err, null);
@@ -51,11 +80,15 @@ describe('WhiteHorse', function () {
       done();
     });
   });
-  
+
   it('inject() should inject $root + $done (async)', function (done) {
-    var container = new WhiteHorse('someroot');
+    var mockRequire = function (){};
+    mockRequire.resolve = function () {
+      return 'some/path';
+    };
+    var container = new WhiteHorse(mockRequire);
     container.inject(function ($root, $done) {
-      assert.equal($root, 'someroot');
+      assert.equal($root, 'some');
       $done(null, 1337);
     }, function (err, result) {
       assert.equal(err, null);
@@ -63,9 +96,22 @@ describe('WhiteHorse', function () {
       done();
     });
   });
+
+  it('should inject double-dollar dependencies', function (done) {
+    var f = function (path) {
+      assert(path);
+      done();
+    };
+    var container = new WhiteHorse(require);
+    container.injectWith(f, [ '$$path' ]);
+  });
   
+  it('getModule() should return undefined if invoked with anything else but a string', function () {
+    assert.equal(new WhiteHorse(require).getModule(7), undefined);
+  });
+
   it('use() should register an npm module', function (done) {
-    var container = new WhiteHorse('someroot').use('nodash');
+    var container = new WhiteHorse(require).use('nodash');
     container.inject(function (nodash) {
       assert(nodash);
     }, function (err, result) {
@@ -73,9 +119,9 @@ describe('WhiteHorse', function () {
       done();
     });
   });
-  
+
   it('use() should register multiple npm modules', function (done) {
-    var container = new WhiteHorse('someroot').use('path', 'fs');
+    var container = new WhiteHorse(require).use('path', 'fs');
     container.inject(function (path, fs) {
       assert(path);
       assert(fs);
@@ -86,7 +132,7 @@ describe('WhiteHorse', function () {
   });
 
   it('use() should honor package.json', function (done) {
-    var container = new WhiteHorse('someroot');
+    var container = new WhiteHorse(require);
     container.use(require(require.resolve('../package.json')));
     container.get('chalk', function (err, chalk) {
       assert.equal(err, null);
@@ -101,7 +147,7 @@ describe('WhiteHorse', function () {
   });
 
   it('useAs() should register an npm module', function (done) {
-    var container = new WhiteHorse('someroot').useAs('nodash', '$');
+    var container = new WhiteHorse(require).useAs('nodash', '$');
     container.get('nodash', function (err, nodash) {
       assert(err);
       assert(!nodash);
@@ -121,7 +167,7 @@ describe('WhiteHorse', function () {
   });
 
   it('useAs() should honor $module', function (done) {
-    var container = new WhiteHorse('someroot')
+    var container = new WhiteHorse(require)
       .useAs(require.resolve('./fixture/someModule.js'), 'someModule')
       .register('dependsOn', 4711)
       .get('someModule', function (err, mod) {
@@ -131,7 +177,7 @@ describe('WhiteHorse', function () {
   });
 
   it('useAs should honor $modules', function (done) {
-    var container = new WhiteHorse('someroot')
+    var container = new WhiteHorse(require)
       .use(require.resolve('./fixture/someModules.js'));
 
     container.get('hello', function (err, mod) {
@@ -145,7 +191,7 @@ describe('WhiteHorse', function () {
   });
 
   it('should identify cyclic dependencies', function (done) {
-    var container = new WhiteHorse('someroot')
+    var container = new WhiteHorse(require)
       .register('hello', function (world) {})
       .register('world', function (hello) {})
       .get('hello', function (err, instance) {
@@ -158,7 +204,7 @@ describe('WhiteHorse', function () {
   });
 
   it('should identify missing dependencies', function (done) {
-    var container = new WhiteHorse('someroot')
+    var container = new WhiteHorse(require)
       .register('hello', function (world) {})
       .register('world', function (missing) {})
       .get('hello', function (err, instance) {
@@ -169,9 +215,9 @@ describe('WhiteHorse', function () {
         done();
       });
   });
-  
+
   it('should report failed dependencies (async)', function (done) {
-    var container = new WhiteHorse('someroot')
+    var container = new WhiteHorse(require)
       .register('hello', function (world) {})
       .register('world', function ($done) { $done('no good'); })
       .get('hello', function (err, instance) {
@@ -187,7 +233,7 @@ describe('WhiteHorse', function () {
   });
 
   it('should report failed dependencies (exception)', function (done) {
-    var container = new WhiteHorse('someroot')
+    var container = new WhiteHorse(require)
       .register('hello', function (world) {})
       .register('world', function ($done) { throw 'no good'; })
       .get('hello', function (err, instance) {
@@ -204,7 +250,7 @@ describe('WhiteHorse', function () {
 
   it('should handle a malformed module', function (done) {
     var module = require.resolve('./fixture/throwingModule.js');
-    var container = new WhiteHorse('someroot').useAs(module, 'someModule');
+    var container = new WhiteHorse(require).useAs(module, 'someModule');
 
     container.get('someModule', function (err, mod) {
       assert(err.initializationFailed);
@@ -212,10 +258,10 @@ describe('WhiteHorse', function () {
       done();
     });
   });
-  
+
   it('should scan a directory for modules', function (done) {
-    var container = new WhiteHorse(__dirname);
-    
+    var container = new WhiteHorse(require);
+
     container.scan('fixture/modules', function (a, b) {
       assert.equal(a, 42);
       assert(b);
@@ -226,21 +272,21 @@ describe('WhiteHorse', function () {
   });
 
   it('should ignore cyclic dependencies if not actually used', function (done) {
-    var container = new WhiteHorse(__dirname);
-    
+    var container = new WhiteHorse(require);
+
     container.scan('fixture/cyclic-modules', function () {
       done();
     }, function (err) {
       assert(false);
     });
   });
-  
+
   it('should report cyclic dependencies scanned from directory', function (done) {
-    var container = new WhiteHorse(__dirname);
-    
+    var container = new WhiteHorse(require);
+
     container.scan('fixture/cyclic-modules', function (a) {
-      
-    }, function (err) { 
+
+    }, function (err) {
       assert.deepEqual(err, {
         dependenciesFailed: {
           a: {
@@ -252,13 +298,13 @@ describe('WhiteHorse', function () {
       done();
     });
   });
-  
+
   it('should report cyclic dependencies when module has a dependency on itself)', function (done) {
-    var container = new WhiteHorse(__dirname);
-    
+    var container = new WhiteHorse(require);
+
     container.scan('fixture/cyclic-modules', function (c) {
-      
-    }, function (err) { 
+
+    }, function (err) {
       assert.deepEqual(err, {
         dependenciesFailed: {
           c: {
@@ -270,10 +316,10 @@ describe('WhiteHorse', function () {
       done();
     });
   });
-  
+
   it('should load and apply $loaders', function (done) {
-    var container = new WhiteHorse(__dirname);
-    container.use(require.resolve('./fixture/jsonLoader.js'));
+    var container = new WhiteHorse(require);
+    container.use('./fixture/jsonLoader.js');
     container.scan('fixture/modules', function (cfg) {
       assert.equal(cfg.hello, 'world');
       done();
@@ -281,9 +327,9 @@ describe('WhiteHorse', function () {
       assert(false);
     });
   });
-  
+
   it('should report modules that failed to load', function (done) {
-    var container = new WhiteHorse(__dirname);
+    var container = new WhiteHorse(require);
     container.use(require.resolve('./fixture/jsonLoader.js'));
     container.scan('fixture/broken-modules', function (a, b) {
       assert(false);
@@ -298,9 +344,9 @@ describe('WhiteHorse', function () {
       done();
     });
   });
-  
+
   it('should inject $module', function (done) {
-    var container = new WhiteHorse()
+    var container = new WhiteHorse(require)
       .register('a', function ($module) {
         return $module;
       })
@@ -316,9 +362,9 @@ describe('WhiteHorse', function () {
         done();
       });
   });
-  
+
   it('should inject $module (deep)', function (done) {
-    var container = new WhiteHorse()
+    var container = new WhiteHorse(require)
       .register('a', function ($module, d) {
         return d + $module;
       })
@@ -337,9 +383,9 @@ describe('WhiteHorse', function () {
         done();
       });
   });
-  
+
   it('should not regard an injector as a singleton', function () {
-    var container = new WhiteHorse()
+    var container = new WhiteHorse(require)
       .register('a', function ($module, d) {
         return d + $module;
       })
@@ -357,13 +403,13 @@ describe('WhiteHorse', function () {
     assert(container.getModule('c').isSingleton());
     assert(!container.getModule('d').isSingleton());
   });
-  
+
   it('should report unhandled errors on scan()', function (done) {
-    var container = new WhiteHorse();
-    container.use(require.resolve('./fixture/jsonLoader.js'));
+    var container = new WhiteHorse(require);
+    container.use('./fixture/jsonLoader');
     container.on('unhandled_error', function (err) {
-      assert(err);
-      assert(err.scanningDirectoryFailed);
+      assert(err, 'There should be an error.');
+      assert(err.scanningDirectoryFailed, 'Should mention scanningDirectoryFailed');
       assert(err.errors);
       assert(err.errors[0]);
       assert(err.errors[0].loadingFailed);
@@ -371,13 +417,13 @@ describe('WhiteHorse', function () {
       assert(err.errors[1].loadingFailed);
       done();
     });
-    container.scan(__dirname + '/fixture/broken-modules', function (a, b) {
+    container.scan('fixture/broken-modules', function (a, b) {
       assert(false);
     });
   });
-  
+
   it('should report unhandled errors on inject()', function (done) {
-    var container = new WhiteHorse();
+    var container = new WhiteHorse(require);
     container.on('unhandled_error', function (err) {
       assert(err);
       assert(err.dependenciesFailed);
@@ -386,13 +432,13 @@ describe('WhiteHorse', function () {
       done();
     });
     container.inject(function (missingDependency) {
-      
+
     });
     container.use({});
   });
-  
+
   it('should register options.autoRegister modules', function (done) {
-    var container = new WhiteHorse();
+    var container = new WhiteHorse(require);
     container.inject(function (path, os, process, timers, console) {
       assert(path);
       assert(os);
@@ -405,10 +451,10 @@ describe('WhiteHorse', function () {
       done();
     });
   });
-  
-  
+
+
   it('should process options.autoRegister', function (done) {
-    var container = new WhiteHorse({
+    var container = new WhiteHorse(require, {
       autoRegister: [ 'path' ]
     });
     container.inject(function (path) {
