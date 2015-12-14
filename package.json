@@ -6,8 +6,9 @@
   "scripts": {
     "test": "gulp check"
   },
-  "author": "Julian Fleischer <tirednesscankill@warhog.net>",
-  "license": "ISC",
+  "author": "Julian Alexander Fleischer <tirednesscankill@warhog.net>",
+  "license": "MIT",
+  "repository": "https://github.com/scravy/white-horse",
   "dependencies": {
     "chalk": "^1.1.1",
     "directorywalker": "^1.0.2",
