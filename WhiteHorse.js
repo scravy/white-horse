@@ -69,6 +69,19 @@ function WhiteHorse(require, givenOptions) {
         return require(module);
       });
     }, options.autoRegister);
+    
+    if (options.usePackageJson) {
+      try {
+        var packageJson = require('./package.json');
+        if ($.isObject(packageJson.dependencies)) {
+          self.use($.keys(packageJson.dependencies));
+        }
+      } catch (err) {
+        setImmediate(self.emit.bind(self, 'warning', {
+          loadingPackageJsonFailed: err
+        }));
+      }
+    }
   }
 
   function ensureCallback(callback) {
@@ -210,8 +223,6 @@ function WhiteHorse(require, givenOptions) {
       } else if ($.isString(arg)) {
         var alias = options.npmNameTransformer(arg);
         self.useAs(arg, alias);
-      } else if ($.isObject(arg) && $.isObject(arg.dependencies)) {
-        self.use($.keys(arg.dependencies));
       }
     } else {
       self.use([].splice.call(arguments, 0));

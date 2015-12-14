@@ -68,4 +68,20 @@ describe('Options', function () {
     
     done();
   });
+  
+  it('uses options.usePackageJson', function (done) {
+    var options = new Options({ usePackageJson: true });
+    
+    assert(options.usePackageJson);
+    
+    done();
+  });
+  
+  it('defaults options.usePackageJson to true', function (done) {
+    var options = new Options({});
+    
+    assert(options.usePackageJson);
+    
+    done();
+  });
 });

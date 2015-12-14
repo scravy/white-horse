@@ -81,6 +81,11 @@ function Options(options) {
   }
   
   this.autoRegister = autoRegister;
+  
+  
+  /** options.usePackageJson **/
+  
+  this.usePackageJson = typeof options.usePackageJson === 'boolean' ? options.usePackageJson : true;
 }
 
 module.exports = Options;

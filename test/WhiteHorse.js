@@ -158,21 +158,32 @@ describe('WhiteHorse', function () {
     });
   });
 
-  it('use() should honor package.json', function (done) {
+  it('should honor options.usePackageJson (which is true by default)', function (done) {
     var container = new WhiteHorse(require);
-    container.use(require(require.resolve('../package.json')));
     container.get('chalk', function (err, chalk) {
       assert.equal(err, null);
       assert(chalk);
-
-      container.get('esprima', function (err, esprima) {
-        assert.equal(err, null);
-        assert(esprima);
-        done();
-      });
+      done();
     });
   });
 
+  it('should honor options.usePackageJson = false', function (done) {
+    var container = new WhiteHorse(require, { usePackageJson: false });
+    container.get('chalk', function (err, chalk) {
+      assert(err);
+      assert.deepEqual(err, { notFound: 'chalk' });
+      done();
+    });
+  });
+  
+  it('should emit a warning if auto-loading package.json failed', function (done) {
+    var container = new WhiteHorse(require('./fixture/require.js'));
+    container.on('warning', function (warning) {
+      assert(warning.loadingPackageJsonFailed);
+      done();
+    });
+  });
+  
   it('useAs() should register an npm module', function (done) {
     var container = new WhiteHorse(require).useAs('nodash', '$');
     container.get('nodash', function (err, nodash) {
