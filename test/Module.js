@@ -10,7 +10,8 @@ describe('Module', function () {
     return {
       injectWith: function (func, dependencies, callback) {
         setImmediate(callback.bind(null, err || null, instance || null));
-      }
+      },
+      emit: function() {}
     };
   };
 

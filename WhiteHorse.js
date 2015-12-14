@@ -98,6 +98,7 @@ function WhiteHorse(require, givenOptions) {
   
   this.register = function register(name, factory) {
     modules[name] = new Module(factory, name);
+    self.emit('registered', modules[name]);
     return self;
   };
   

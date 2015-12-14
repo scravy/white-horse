@@ -45,10 +45,14 @@ module.exports = function Module(factory, name) {
   this.getInstance = function getInstance(container, callback) {
     var __forModule = arguments[2];
     if (_isInitialized) {
-      setImmediate(callback.bind(null, _error, _instance));
+      setImmediate(function () {
+        container.emit('retrieved', name, _error, _instance);
+        callback(_error, _instance);
+      });
     } else {
       setImmediate(function () {
         container.injectWith(_factory, _dependencies, function (err, instance) {
+          container.emit('initialized', name, err, instance);
           _isInitialized = _isSingleton;
           if (err) {
             _error = err;

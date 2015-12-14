@@ -7,58 +7,115 @@
 
 Simple, light-weight dependency injection for NodeJS that supports modules which load asynchronously.
 
-Usage
------
+
+## Usage
 
     npm install white-horse
+
+```JavaScript
+var WhiteHorse = require('white-horse');
+
+var container = new WhiteHorse(require, {
+  /* options (optional) */
+});
+```
+
+## Examples
    
 ```JavaScript
-    WhiteHorse(require)
-      .register('oneModule', function () {
-        return "l";
-      })
-      .register('anotherModule', function (oneModule, yetAnotherModule) {
-        return "He" + oneModule + yetAnotherModule;
-      })
-      .register('yetAnotherModule', function (oneModule, $done) {
-        $done(null, oneModule + "o");
-      })
-      .inject(function (anotherModule) {
-        console.log(anotherModule);
-      }, function (err) {
-        console.error(err);
-      });
+WhiteHorse(require)
+  .register('oneModule', function () {
+    return "l";
+  })
+  .register('anotherModule', function (oneModule, yetAnotherModule) {
+    return "He" + oneModule + yetAnotherModule;
+  })
+  .register('yetAnotherModule', function (oneModule, $done) {
+    $done(null, oneModule + "o");
+  })
+  .inject(function (anotherModule) {
+    console.log(anotherModule);
+  }, function (err) {
+    console.error(err);
+  });
 ```
     
 ```JavaScript
-    WhiteHorse(require)
-      .use(require('./package.json'))
-      .scan('modules', function (main) {
-        main.run();
-      }, function (error) {
-        console.log("Aww snap:", error);
-      });
+WhiteHorse(require)
+  .use(require('./package.json'))
+  .scan('modules', function (main) {
+    main.run();
+  }, function (error) {
+    console.log("Aww snap:", error);
+  });
 ```
 
-API
----
+
+## Getting Started
+
+
+
+## Options
+
+### `usePackageJson`
+
+### `autoRegister`
+
+### `npmPrefix`
+
+### `npmPostfix`
+
+### `npmNormalize`
+
+### `npmNameTransformer`
+
+
+## API
 
 ### `register(name, module)`
 
+Registers a `module` with the given `name`.
+
 ### `get(name, callback)`
+
+Retrieves an instance of the module named `name`.
+
+Example:
+
+```JavaScript
+container.get('module', function (err, instance) {
+  if (err) {
+    // report `err`
+  } else {
+    // do something with `instance`
+  }
+});
+```
 
 ### `use(npmModule)`
 
+Uses the given `npmModule`.
+
 ### `useAs(npmModule, alias)`
 
+Uses the given `npmModule` but registers it with the given `alias`.
+
 ### `scan(directory, onSuccess, onError)`
+
+Scans the given `directory` and injects the `onSuccess` function. On any error while scanning or injecting `onError` is called. If `onError` is not a valid callback it will emit the `unhandled_error` event.
 
 ### `inject(function, callback)`
 
 ### `injectWith(function, dependencies, callback)`
 
-License
--------
+
+## Events
+
+### `unhandled_error`
+
+### `warning`
+
+## License
 
     Copyright (c) 2015 Julian Alexander Fleischer
 
