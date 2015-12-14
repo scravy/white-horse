@@ -184,6 +184,14 @@ describe('WhiteHorse', function () {
     });
   });
   
+  it('should cope with a package.json that mentions no dependencies', function (done) {
+    var container = new WhiteHorse(require('./fixture/empty-package/require.js'));
+    container.on('warning', function (warning) {
+      assert(false);
+    });
+    setImmediate(done);
+  });
+  
   it('useAs() should register an npm module', function (done) {
     var container = new WhiteHorse(require).useAs('nodash', '$');
     container.get('nodash', function (err, nodash) {
