@@ -55,6 +55,7 @@ WhiteHorse(require)
 
 
 
+
 ## Options
 
 ### `usePackageJson`
@@ -111,9 +112,21 @@ Scans the given `directory` and injects the `onSuccess` function. On any error w
 
 ## Events
 
+### `initialized`
+
+### `retrieved`
+
 ### `unhandled_error`
 
 ### `warning`
+
+
+## Plugin Development
+
+### $modules
+
+### $loaders
+
 
 ## License
 
