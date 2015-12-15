@@ -20,6 +20,7 @@ var container = new WhiteHorse(require, {
 });
 ```
 
+
 ## Examples
    
 ```JavaScript
@@ -54,21 +55,26 @@ WhiteHorse(require)
 ## Getting Started
 
 
-
-
 ## Options
 
-### `usePackageJson`
+### `usePackageJson` (boolean, default: true)
 
-### `autoRegister`
+Whether `dependencies` from your `package.json` should automatically be picked up or not.
 
-### `npmPrefix`
+### `autoRegister` (array of strings)
 
-### `npmPostfix`
+An array of modules which should automatically be registered.
+By default this is a list of all the modules which are built-in to
+node (like `path`, `fs`, etc.). If you do not want any modules to
+be registered automatically just set this to `[]` (the empty array).
 
-### `npmNormalize`
+### `npmPrefix` (string)
 
-### `npmNameTransformer`
+### `npmPostfix` (string)
+
+### `npmNormalize` (boolean)
+
+### `npmNameTransformer` (function: string -> string)
 
 
 ## API
@@ -110,6 +116,29 @@ Scans the given `directory` and injects the `onSuccess` function. On any error w
 ### `injectWith(function, dependencies, callback)`
 
 
+### Magic Modules
+
+## `$root`
+
+The path to your project root, determined from the `require` method which you
+passed into the `WhiteHorse` constructor.
+
+## `$module`
+
+The name of the module this instance is going to be injected into.
+
+## `$done`
+
+
+### Module annotations
+
+## `$singleton` (boolean, default: true)
+
+## `$factory` (boolean, default: true)
+
+## `$dependencies` (array of strings)
+
+
 ## Events
 
 ### `initialized`
@@ -123,9 +152,9 @@ Scans the given `directory` and injects the `onSuccess` function. On any error w
 
 ## Plugin Development
 
-### $modules
+### `$modules`
 
-### $loaders
+### `$loaders`
 
 
 ## License
