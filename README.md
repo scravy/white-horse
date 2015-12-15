@@ -157,7 +157,7 @@ The name of the module this instance is going to be injected into.
 ### `$loaders`
 
 
-## License
+## License (MIT)
 
     Copyright (c) 2015 Julian Alexander Fleischer
 
