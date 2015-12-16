@@ -55,28 +55,6 @@ WhiteHorse(require)
 ## Getting Started
 
 
-## Options
-
-### `usePackageJson` (boolean, default: true)
-
-Whether `dependencies` from your `package.json` should automatically be picked up or not.
-
-### `autoRegister` (array of strings)
-
-An array of modules which should automatically be registered.
-By default this is a list of all the modules which are built-in to
-node (like `path`, `fs`, etc.). If you do not want any modules to
-be registered automatically just set this to `[]` (the empty array).
-
-### `npmPrefix` (string)
-
-### `npmPostfix` (string)
-
-### `npmNormalize` (boolean)
-
-### `npmNameTransformer` (function: string -> string)
-
-
 ## API
 
 ### `register(name, module)`
@@ -116,27 +94,61 @@ Scans the given `directory` and injects the `onSuccess` function. On any error w
 ### `injectWith(function, dependencies, callback)`
 
 
-### Magic Modules
+## Options
 
-## `$root`
+### `usePackageJson` (boolean, default: true)
+
+Whether `dependencies` from your `package.json` should automatically be picked up or not.
+
+### `autoRegister` (array of strings)
+
+An array of modules which should automatically be registered.
+By default this is a list of all the modules which are built-in to
+node (like `path`, `fs`, etc.). If you do not want any modules to
+be registered automatically just set this to `[]` (the empty array).
+
+### `npmPrefix` (string)
+
+### `npmPostfix` (string)
+
+### `npmNormalize` (boolean)
+
+### `npmNameTransformer` (function: string -> string)
+
+
+## Magic Modules
+
+### `$root`
 
 The path to your project root, determined from the `require` method which you
 passed into the `WhiteHorse` constructor.
 
-## `$module`
+### `$module`
 
-The name of the module this instance is going to be injected into.
+The name of the module this instance is going to be injected into. If your module depends on it,
+it is automatically regarded as `$singleton = true`.
 
-## `$done`
+### `$done`
+
+A callback to finish loading of the module. If your module depends on this it is regarded as
+an asynchronous module (i.e. you must call `$done` or the module will never finish loading).
+
+Example:
+
+```JavaScript
+module.exports = function ($done) {
+  $done(null, "finished loading");
+};
+```
 
 
-### Module annotations
+## Module annotations
 
-## `$singleton` (boolean, default: true)
+### `$singleton` (boolean, default: true)
 
-## `$factory` (boolean, default: true)
+### `$factory` (boolean, default: true)
 
-## `$dependencies` (array of strings)
+### `$dependencies` (array of strings)
 
 
 ## Events
