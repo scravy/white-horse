@@ -5,7 +5,7 @@
 [![Dependencies](https://david-dm.org/scravy/white-horse/dev-status.svg)](https://david-dm.org/scravy/white-horse#info=devDependencies&view=table)
 
 
-Simple, light-weight dependency injection for NodeJS that supports modules which load asynchronously.
+Very simple, light-weight dependency injection for NodeJS that supports modules which load asynchronously.
 
 
 ## Usage
