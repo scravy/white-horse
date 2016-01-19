@@ -35,7 +35,7 @@ WhiteHorse(require)
     $done(null, oneModule + "o");
   })
   .inject(function (anotherModule) {
-    console.log(anotherModule); // 0.44126248732209206
+    console.log(anotherModule); // prints "Hello"
   }, function (err) {
     console.error(err);
   });
@@ -72,7 +72,7 @@ container.get('pi', function (err, module) {
 
 If it is a function it is taken to be the factory for a singleton.
 
-Note how `module` does have the same module when retrieving the module twice:
+Note how `module` does have the same value when retrieving the module twice:
 
 ```JavaScript
 function f() {
@@ -173,7 +173,7 @@ Uses the given `npmModule` but registers it with the given `alias`.
 Example:
 
 ```JavaScript
-container.use('nodash', 'theDash');
+container.useAs('nodash', 'theDash');
 container.inject(function (theDash) {
   // ...
 });
