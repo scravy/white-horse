@@ -103,9 +103,11 @@ container.get('func', function (err, module) {
 });
 ```
 
-If you do not want it to be a factory for a singleton, set `$singleton = false` on it.
+If you do not want it to be a factory for a singleton,
+set `$singleton = false` on it.
 
-Node how the `module` has a different value each time it is retrieved:
+Node how the `module` has a different value each time
+it is retrieved:
 
 ```JavaScript
 function h() {
@@ -121,7 +123,8 @@ container.get('singleton', function (err, module) {
 });
 ```
 
-If a function fails to initialize a module, the callback will report that exception:
+If a function fails to initialize a module, the callback will report
+that exception:
 
 ```JavaScript
 function e() {
@@ -182,7 +185,10 @@ container.inject(function (theDash) {
 
 ### `scan(directory, onSuccess, onError)`
 
-Scans the given `directory` and injects the `onSuccess` function. On any error while scanning or injecting `onError` is called. If `onError` is not a valid callback it will emit the `unhandled_error` event.
+Scans the given `directory` and injects the `onSuccess` function.
+On any error while scanning or injecting `onError` is called.
+If `onError` is not a valid callback it will emit
+the `unhandled_error` event.
 
 
 ### `inject(function, callback)`
@@ -218,10 +224,12 @@ container.injectWith(f, [ 'a', 'b' ]); // 1 \n 2 \n
 
 ### `usePackageJson` (boolean, default: true)
 
-Whether `dependencies` from your `package.json` should automatically be picked up or not.
+Whether `dependencies` from your `package.json` should automatically
+be picked up or not.
 
-With this option, if your `package.json` contains `nodash` as a dependency,
-you can inject `nodash` without registering it by the means of `container.use('nodash')`.
+With this option, if your `package.json` contains `nodash` as a
+dependency, you can inject `nodash` without registering it by
+the means of `container.use('nodash')`.
 
 It is enabled by default.
 
@@ -233,7 +241,8 @@ By default this is a list of all the modules which are built-in to
 node (like `path`, `fs`, etc.). If you do not want any modules to
 be registered automatically just set this to `[]` (the empty array).
 
-By default you can inject the modules that ship with node without explicitly registering them, i.e.
+By default you can inject the modules that ship with node without
+explicitly registering them, i.e.
 
 ```JavaScript
 container.inject(function (fs, path) {
@@ -243,6 +252,15 @@ container.inject(function (fs, path) {
 
 will work without the need of explicitly doing `container.use('fs')`
 or `container.use('path')` first.
+
+If you want to disable or change this behavior, you can set this
+option to a custom array, for example:
+
+```JavaScript
+new WhiteHorse(require, {
+  autoRegister: []
+});
+```
 
 
 ### `npmPrefix` (string)
@@ -334,7 +352,28 @@ container.inject(function (f) {
 
 ### `$modules`
 
+If your module exports a `$modules` object, the modules are registered
+in the container when you `use()` this package.
+
+```JavaScript
+module.exports.$modules = {
+  f: function (fs, path, $done) {
+    fs.readFile('someFile.txt', $done);
+  },
+  g: function (f) {
+    return 'The text in someFile.txt is: ' + f;
+  }
+};
+```
+
+
 ### `$loaders`
+
+
+
+
+### `$$..`
+
 
 
 ## License (MIT)
