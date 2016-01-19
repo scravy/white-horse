@@ -35,7 +35,7 @@ WhiteHorse(require)
     $done(null, oneModule + "o");
   })
   .inject(function (anotherModule) {
-    console.log(anotherModule);
+    console.log(anotherModule); // 0.44126248732209206
   }, function (err) {
     console.error(err);
   });
@@ -52,14 +52,87 @@ WhiteHorse(require)
 ```
 
 
-## Getting Started
-
-
 ## API
 
 ### `register(name, module)`
 
 Registers a `module` with the given `name`.
+
+The dependencies of that factory function are its named arguments or the dependencies you
+name explicitly using `$dependencies = [ ... ]`.
+
+A module can be anything:
+
+```Javascript
+container.register('pi', Math.pi)
+container.get('pi', function (err, module) {
+  console.log(module); // 3.141592653589793
+});
+```
+
+If it is a function it is taken to be the factory for a singleton.
+
+Note how `module` does have the same module when retrieving the module twice:
+
+```JavaScript
+function f() {
+  return 7 + Math.random();
+}
+container.register('seven', f);
+container.get('seven', function (err, module) {
+  console.log(module); // 7.9937735903076828
+});
+container.get('seven', function (err, module) {
+  console.log(module); // 7.9937735903076828
+});
+```
+
+If you want to use the literal function, set `$factory = false` on it.
+
+Note how `module()` is a function invocation in the following example:
+
+```
+function g() {
+  return Math.random();
+}
+g.$factory = false;
+container.register('func', g);
+container.get('func', function (err, module) {
+  console.log(module()); // 0.44126248732209206
+  console.log(module()); // 0.18552138609811664
+});
+```
+
+If you do not want it to be a factory for a singleton, set `$singleton = false` on it.
+
+Node how the `module` has a different value each time it is retrieved:
+
+```JavaScript
+function h() {
+  return Math.random();
+}
+g.$singleton = false;
+container.register('singleton', h);
+container.get('singleton', function (err, module) {
+  console.log(module); // 0.5290916324593127
+});
+container.get('singleton', function (err, module) {
+  console.log(module); // 0.6509554286021739
+});
+```
+
+If a function fails to initialize a module, the callback will report that exception:
+
+```JavaScript
+function e() {
+  throw "damn it";
+}
+container.register('exceptional;, e);
+container.get('exceptional', function (err, module) {
+  console.log(err); // "damn it" (would be `null` on success)
+});
+```
+
 
 ### `get(name, callback)`
 
@@ -77,28 +150,81 @@ container.get('module', function (err, instance) {
 });
 ```
 
+
 ### `use(npmModule)`
 
 Uses the given `npmModule`.
+
+Example:
+
+```JavaScript
+container.use('nodash');
+container.inject(function (nodash) {
+  // `nodash` is the same as `require('nodash')`
+  // but this way it is injected.
+});
+```
+
 
 ### `useAs(npmModule, alias)`
 
 Uses the given `npmModule` but registers it with the given `alias`.
 
+Example:
+
+```JavaScript
+container.use('nodash', 'theDash');
+container.inject(function (theDash) {
+  // ...
+});
+```
+
+
 ### `scan(directory, onSuccess, onError)`
 
 Scans the given `directory` and injects the `onSuccess` function. On any error while scanning or injecting `onError` is called. If `onError` is not a valid callback it will emit the `unhandled_error` event.
 
+
 ### `inject(function, callback)`
 
+Injects the given `function` in this containers context.
+
+```JavaScript
+container.register('a', 1);
+container.regsiter('b', 2);
+container.inject(function (a, b) {
+  console.log(a + b); // 3
+});
+```
+
+
 ### `injectWith(function, dependencies, callback)`
+
+Injects the given `function` with the given array of `dependencies`.
+
+```JavaScript
+container.register('a', 1);
+container.register('b', 2);
+function f() {
+  console.log(arguments[0]);
+  console.log(arguments[1]);
+}
+container.injectWith(f, [ 'a', 'b' ]); // 1 \n 2 \n
+```
 
 
 ## Options
 
+
 ### `usePackageJson` (boolean, default: true)
 
 Whether `dependencies` from your `package.json` should automatically be picked up or not.
+
+With this option, if your `package.json` contains `nodash` as a dependency,
+you can inject `nodash` without registering it by the means of `container.use('nodash')`.
+
+It is enabled by default.
+
 
 ### `autoRegister` (array of strings)
 
@@ -106,6 +232,18 @@ An array of modules which should automatically be registered.
 By default this is a list of all the modules which are built-in to
 node (like `path`, `fs`, etc.). If you do not want any modules to
 be registered automatically just set this to `[]` (the empty array).
+
+By default you can inject the modules that ship with node without explicitly registering them, i.e.
+
+```JavaScript
+container.inject(function (fs, path) {
+  // ...
+});
+```
+
+will work without the need of explicitly doing `container.use('fs')`
+or `container.use('path')` first.
+
 
 ### `npmPrefix` (string)
 
@@ -123,10 +261,31 @@ be registered automatically just set this to `[]` (the empty array).
 The path to your project root, determined from the `require` method which you
 passed into the `WhiteHorse` constructor.
 
+
 ### `$module`
 
-The name of the module this instance is going to be injected into. If your module depends on it,
-it is automatically regarded as `$singleton = true`.
+The name of the module this instance is going to be injected into.
+
+A factory which has `$module` as one of its dependencies is automatically
+regarded as `$singleton = false`, i.e. it will be invoked everytime the module
+it is registered as is injected somewhere.
+
+```JavaScript
+container.register('magic', function ($module) {
+  return $module;
+});
+container.register('a', function (magic) {
+  console.log(magic); // "a"
+});
+container.register('b', function (magic) {
+  console.log(magic); // "b"
+});
+```
+
+`$module` is useful when building plugins. As an example:
+[white-horse-config](http://github.com/scravy/white-horse-config) is using
+this mechanism to inject per-module configuration.
+
 
 ### `$done`
 
@@ -139,6 +298,15 @@ Example:
 module.exports = function ($done) {
   $done(null, "finished loading");
 };
+```
+
+```JavaScript
+container.register('f', function ($done) {
+  $done(null, "success");
+});
+container.inject(function (f) {
+  console.log(f); // prints "success"
+});
 ```
 
 
