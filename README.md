@@ -127,7 +127,7 @@ If a function fails to initialize a module, the callback will report that except
 function e() {
   throw "damn it";
 }
-container.register('exceptional;, e);
+container.register('exceptional', e);
 container.get('exceptional', function (err, module) {
   console.log(err); // "damn it" (would be `null` on success)
 });
