@@ -91,7 +91,7 @@ If you want to use the literal function, set `$factory = false` on it.
 
 Note how `module()` is a function invocation in the following example:
 
-```
+```JavaScript
 function g() {
   return Math.random();
 }
