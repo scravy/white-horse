@@ -113,7 +113,7 @@ it is retrieved:
 function h() {
   return Math.random();
 }
-g.$singleton = false;
+h.$singleton = false;
 container.register('singleton', h);
 container.get('singleton', function (err, module) {
   console.log(module); // 0.5290916324593127
