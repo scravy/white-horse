@@ -51,8 +51,9 @@ module.exports = function Module(factory, name) {
       });
     } else {
       setImmediate(function () {
+        container.emit('initializing', name, _isInitialized);
         container.injectWith(_factory, _dependencies, function (err, instance) {
-          container.emit('initialized', name, err, instance);
+          container.emit('initialized', name, err, instance, _isInitialized);
           _isInitialized = _isSingleton;
           if (err) {
             _error = err;

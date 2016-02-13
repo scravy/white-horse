@@ -269,7 +269,17 @@ new WhiteHorse(require, {
 
 ### `npmNormalize` (boolean)
 
+When `true` will normalize all npm module names loaded from `package.json`
+so that a module like `hello-world-123` could be loaded by the name
+`helloWorld123`. This is primarily useful when auto registering modules
+and using their names in function declarations directly (otherwise modules
+like these would have to be mentioned in a `$dependencies` declaration).
+
+By default `false`.
+
+
 ### `npmNameTransformer` (function: string -> string)
+
 
 
 ## Magic Modules

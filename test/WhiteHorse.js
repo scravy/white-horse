@@ -498,7 +498,6 @@ describe('WhiteHorse', function () {
     });
   });
 
-
   it('should process options.autoRegister', function (done) {
     var container = new WhiteHorse(require, {
       autoRegister: [ 'path' ]
@@ -513,6 +512,22 @@ describe('WhiteHorse', function () {
         assert.deepEqual(err, { dependenciesFailed: { os: { notFound: 'os' } } });
         done();
       });
+    });
+  });
+  
+  it('should not load a module twice', function (done) {
+    var container = new WhiteHorse(require);
+    var sum = 0;
+    container.register('shared', function () {
+        sum += 1;
+        return sum;
+    });
+    container.register('one', function (shared) {});
+    container.register('two', function (shared) {});
+    container.inject(function (one, two) {}, function (err, result) {
+        assert.equal(err, null);
+        assert.equal(sum, 1);
+        done();
     });
   });
 });

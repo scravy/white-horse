@@ -23,6 +23,8 @@ function WhiteHorse(require, givenOptions) {
     return new WhiteHorse(require, givenOptions);
   }
 
+  EventEmitter.call(this);
+
   var self = this;
   
   function resolve() {
@@ -116,19 +118,21 @@ function WhiteHorse(require, givenOptions) {
     var errors = {};
     var isAsync = false;
 
+    var remainingDependencies = Array.prototype.slice.call(dependencies);
+
     callback = ensureCallback(callback);
 
     function done(dep, err, instance) {
-      fulfilled += 1;
       if (err) {
         errors[dep] = err;
       } else if (dep) {
         args[dep] = instance;
       }
-      if (fulfilled === dependencies.length + 1) {
+      if (remainingDependencies.length > 0) {
+          getDependency(remainingDependencies.shift());
+      } else {
         if ($.length(errors) > 0) {
-          setImmediate(callback.bind(null,
-              { dependenciesFailed: errors }));
+          setImmediate(callback.bind(null, { dependenciesFailed: errors }));
         } else {
           var argsArray = $.map(function (dep) {
             return args[dep];
@@ -145,7 +149,7 @@ function WhiteHorse(require, givenOptions) {
       }
     }
 
-    $.each(function (dep) {
+    function getDependency(dep) {
       switch (dep) {
         case '$done':
           isAsync = true;
@@ -166,8 +170,8 @@ function WhiteHorse(require, givenOptions) {
         default:
           self.get(dep, done.bind(null, dep), __name);
       }
-    }, dependencies);
-
+    }
+    
     done(null, null, null);
   };
 
