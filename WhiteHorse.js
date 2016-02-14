@@ -64,12 +64,13 @@ function WhiteHorse(require, givenOptions) {
     }, [ '$root', '$module', '$done' ]);
     
     $.each(function (module) {
-      self.register(module, function () {
+      var factory = function () {
         if (GLOBAL[module]) {
           return GLOBAL[module];
         }
         return require(module);
-      });
+      };
+      self.register(module, factory);
     }, options.autoRegister);
     
     if (options.usePackageJson) {
@@ -114,7 +115,6 @@ function WhiteHorse(require, givenOptions) {
     var __forModule = arguments[4];
 
     var args = {};
-    var fulfilled = 0;
     var errors = {};
     var isAsync = false;
 

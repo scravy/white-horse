@@ -5,6 +5,7 @@ describe('WhiteHorse', function () {
 
   var assert = require('assert');
   var path = require('path');
+  var util = require('util');
   var WhiteHorse = require('../index.js');
 
   it('should be initialized without errors', function () {
@@ -530,4 +531,5 @@ describe('WhiteHorse', function () {
         done();
     });
   });
+
 });

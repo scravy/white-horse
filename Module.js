@@ -39,8 +39,6 @@ module.exports = function Module(factory, name) {
 
   var _isAsync = $.any($.eq('$done'), _dependencies);
 
-  
-  var self = this;
 
   this.getInstance = function getInstance(container, callback) {
     var __forModule = arguments[2];
