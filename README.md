@@ -43,7 +43,6 @@ WhiteHorse(require)
     
 ```JavaScript
 WhiteHorse(require)
-  .use(require('./package.json'))
   .scan('modules', function (main) {
     main.run();
   }, function (error) {
@@ -265,7 +264,21 @@ new WhiteHorse(require, {
 
 ### `npmPrefix` (string)
 
+All module names loaded from `package.json` will be prefixed with this
+value. To separate modules you depend on from your own modules you
+could for example introduce some sort of namespacing by setting this e.g.
+to `__` (which would make `express` if it is in your `package.json` discoverable
+by the name of `__express`).
+
+Defaults to the empty string.
+
+
 ### `npmPostfix` (string)
+
+Same as `npmPrefix` but with a custom postfix.
+
+Defaults to the empty string.
+
 
 ### `npmNormalize` (boolean)
 
@@ -280,6 +293,13 @@ By default `false`.
 
 ### `npmNameTransformer` (function: string -> string)
 
+A general `npmNameTransformer` that applies a custom function on module names
+loaded from `package.json`. Note that if you apply an `npmPrefix`, an `npmPostfix`,
+or `npmNormalize` these transformers are composed with the one you pass here and
+applied after your transformer is applied. That means that an `npmPrefix` is always added,
+regardless of what your transformer does.
+
+By default the identity function.
 
 
 ## Magic Modules
@@ -351,11 +371,25 @@ container.inject(function (f) {
 
 ### `initialized`
 
+Fired when a module was newly initialized.
+
+
 ### `retrieved`
+
+Fired when an already initialized module was retrieved again.
+
 
 ### `unhandled_error`
 
+Fired when an error occurred somewhere which did not have a
+change to propagate through the means of a callback. This event
+is fired when a function requiring a callback is invoked without
+a callback and fails.
+
+
 ### `warning`
+
+Miscellaneous warnings.
 
 
 ## Plugin Development
